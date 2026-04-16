@@ -1,38 +1,80 @@
-//インベントリ本体：アイテム管理と選択状態を保持
-using System.Collections.Generic;
+// インベントリ本体：実体アイテムを固定スロットで保持し選択状態を管理
 using UnityEngine;
 
 public class Inventory : MonoBehaviour
 {
-    public List<ItemData> items = new List<ItemData>();
     public int maxSlots = 4;
+    public PickupItem[] slots;
     public int selectedIndex = 0;
 
-    public bool AddItem(ItemData item)
+    void Awake()
     {
-        if (items.Count >= maxSlots) return false;
-        items.Add(item);
-        if (items.Count == 1) selectedIndex = 0;
-        return true;
+        slots = new PickupItem[maxSlots];
     }
 
-    public ItemData GetSelectedItem()
+    public bool AddItem(PickupItem item)
     {
-        if (items.Count == 0) return null;
-        selectedIndex = Mathf.Clamp(selectedIndex, 0, items.Count - 1);
-        return items[selectedIndex];
+        if (item == null)
+            return false;
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] == null)
+            {
+                slots[i] = item;
+                item.SetStoredState();
+                Debug.Log("取得: " + item.itemData.itemName + " / slot=" + i);
+                return true;
+            }
+        }
+
+        Debug.Log("持てない");
+        return false;
+    }
+
+    public PickupItem GetItemAt(int index)
+    {
+        if (index < 0 || index >= slots.Length)
+            return null;
+
+        return slots[index];
+    }
+
+    public PickupItem GetSelectedItem()
+    {
+        if (selectedIndex < 0 || selectedIndex >= slots.Length)
+            return null;
+
+        return slots[selectedIndex];
+    }
+
+    public PickupItem RemoveSelectedItem()
+    {
+        if (selectedIndex < 0 || selectedIndex >= slots.Length)
+            return null;
+
+        PickupItem removed = slots[selectedIndex];
+        slots[selectedIndex] = null;
+        return removed;
     }
 
     public void SelectNext()
     {
-        if (items.Count == 0) return;
-        selectedIndex = (selectedIndex + 1) % items.Count;
+        if (slots.Length == 0)
+            return;
+
+        selectedIndex++;
+        if (selectedIndex >= slots.Length)
+            selectedIndex = 0;
     }
 
     public void SelectPrevious()
     {
-        if (items.Count == 0) return;
+        if (slots.Length == 0)
+            return;
+
         selectedIndex--;
-        if (selectedIndex < 0) selectedIndex = items.Count - 1;
+        if (selectedIndex < 0)
+            selectedIndex = slots.Length - 1;
     }
 }

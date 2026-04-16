@@ -1,21 +1,22 @@
 // スロットUI：1枠分の表示と選択状態の見た目管理
 using UnityEngine;
-using TMPro;
+using UnityEngine.UI;
 
 public class InventorySlotUI : MonoBehaviour
 {
-    public TextMeshProUGUI label;
+    public Text label;
     public GameObject selectedFrame;
 
     public void SetItem(ItemData item, bool selected)
     {
-        label.text = item.itemName;
-        selectedFrame.SetActive(selected);
-    }
+        if (label != null)
+        {
+            label.text = item == null ? "" : item.itemName;
+        }
 
-    public void SetEmpty()
-    {
-        label.text = "";
-        selectedFrame.SetActive(false);
+        if (selectedFrame != null)
+        {
+            selectedFrame.SetActive(selected);
+        }
     }
 }
