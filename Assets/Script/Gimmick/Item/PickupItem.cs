@@ -12,8 +12,8 @@ public class PickupItem : MonoBehaviour
     public float rotateSpeed = 3f;
 
     [Header("手持ち位置補正")]
-    public Vector3 holdLocalPositionOffset = Vector3.zero;
-    public Vector3 holdLocalRotationOffset = Vector3.zero;
+    public Vector3 holdPositionOffset = Vector3.zero;
+    public Vector3 holdRotationOffset = Vector3.zero;
 
     private Rigidbody rb;
     private Collider[] colliders;
@@ -21,12 +21,7 @@ public class PickupItem : MonoBehaviour
 
     void Awake()
     {
-        //旧:物体は子オブジェに変えたのでこれはいらない(これだとこのスクリプトをアタッチした本体でチェックするから)
-        //rb = GetComponent<Rigidbody>();
-
-        //新:子オブジェクト対応はこう
         rb = GetComponentInChildren<Rigidbody>(true);
-
         colliders = GetComponentsInChildren<Collider>(true);
         renderers = GetComponentsInChildren<Renderer>(true);
     }
@@ -42,16 +37,15 @@ public class PickupItem : MonoBehaviour
         {
             rb.isKinematic = true;
             rb.useGravity = false;
+            rb.detectCollisions = false;
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
     }
 
-    public void SetHeldState(Transform holdPoint)
+    public void SetHeldState()
     {
-        transform.SetParent(holdPoint);
-        transform.localPosition = holdLocalPositionOffset;
-        transform.localRotation = Quaternion.Euler(holdLocalRotationOffset);
+        transform.SetParent(null);
 
         SetVisible(true);
         SetColliders(false);
@@ -60,6 +54,7 @@ public class PickupItem : MonoBehaviour
         {
             rb.isKinematic = true;
             rb.useGravity = false;
+            rb.detectCollisions = false;
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
@@ -78,6 +73,7 @@ public class PickupItem : MonoBehaviour
         {
             rb.isKinematic = false;
             rb.useGravity = true;
+            rb.detectCollisions = true;
         }
     }
 

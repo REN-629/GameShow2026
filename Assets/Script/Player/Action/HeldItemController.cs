@@ -1,10 +1,15 @@
-// 手持ち管理：選択中アイテムの表示、使用、右クリック回転を管理
+// 手持ち管理：選択中アイテムの表示、使用、右クリック回転、指定距離追従を管理
 using UnityEngine;
 
 public class HeldItemController : MonoBehaviour
 {
     public Inventory inventory;
-    public Transform holdPoint;
+    public Transform handPoint;
+
+    [Header("手持ち追従距離")]
+    public float forwardDistance = 0.5f;
+    public float sideOffset = 0.15f;
+    public float heightOffset = -0.1f;
 
     private PickupItem currentHeldItem;
 
@@ -15,9 +20,14 @@ public class HeldItemController : MonoBehaviour
         HandleRotation();
     }
 
+    void LateUpdate()
+    {
+        FollowHandPoint();
+    }
+
     void UpdateHeldItem()
     {
-        if (inventory == null || holdPoint == null)
+        if (inventory == null || handPoint == null)
             return;
 
         PickupItem selectedItem = inventory.GetSelectedItem();
@@ -34,9 +44,28 @@ public class HeldItemController : MonoBehaviour
 
         if (currentHeldItem != null)
         {
-            currentHeldItem.SetHeldState(holdPoint);
+            currentHeldItem.SetHeldState();
             Debug.Log("手持ち表示: " + currentHeldItem.itemData.itemName);
         }
+    }
+
+    void FollowHandPoint()
+    {
+        if (currentHeldItem == null || handPoint == null)
+            return;
+
+        Vector3 targetPosition =
+          handPoint.position
+          + handPoint.forward * forwardDistance
+          + handPoint.right * sideOffset
+          + handPoint.up * heightOffset;
+
+        currentHeldItem.transform.position = targetPosition;
+
+        Quaternion targetRotation =
+          handPoint.rotation * Quaternion.Euler(currentHeldItem.holdRotationOffset);
+
+        currentHeldItem.transform.rotation = targetRotation;
     }
 
     void HandleUse()
@@ -60,14 +89,10 @@ public class HeldItemController : MonoBehaviour
             float mouseX = Input.GetAxis("Mouse X");
             float mouseY = Input.GetAxis("Mouse Y");
 
-            Transform itemTransform = currentHeldItem.transform;
-
-            itemTransform.localRotation *= Quaternion.Euler(
-                itemTransform.InverseTransformDirection(transform.up) * mouseX * -currentHeldItem.rotateSpeed
-            );
-
-            itemTransform.localRotation *= Quaternion.Euler(
-                itemTransform.InverseTransformDirection(transform.right) * mouseY * currentHeldItem.rotateSpeed
+            currentHeldItem.holdRotationOffset += new Vector3(
+              mouseY * currentHeldItem.rotateSpeed,
+              -mouseX * currentHeldItem.rotateSpeed,
+              0f
             );
         }
     }
