@@ -1,17 +1,15 @@
-// 手持ち管理：選択中アイテムの表示、使用、右クリック回転、指定距離追従を管理
 using UnityEngine;
 
+// 手持ちアイテム管理：表示・使用・回転・回転中判定
 public class HeldItemController : MonoBehaviour
 {
     public Inventory inventory;
-    public Transform handPoint;
-
-    [Header("手持ち追従距離")]
-    public float forwardDistance = 0.5f;
-    public float sideOffset = 0.15f;
-    public float heightOffset = -0.1f;
+    public Transform holdPoint;
 
     private PickupItem currentHeldItem;
+
+    // ← これが今回のエラー解決用
+    public bool IsRotatingItem { get; private set; }
 
     void Update()
     {
@@ -22,12 +20,18 @@ public class HeldItemController : MonoBehaviour
 
     void LateUpdate()
     {
-        FollowHandPoint();
+        if (currentHeldItem != null && holdPoint != null)
+        {
+            currentHeldItem.ForceHoldTransform(holdPoint);
+        }
     }
 
+    // =========================
+    // アイテム切り替え
+    // =========================
     void UpdateHeldItem()
     {
-        if (inventory == null || handPoint == null)
+        if (inventory == null || holdPoint == null)
             return;
 
         PickupItem selectedItem = inventory.GetSelectedItem();
@@ -44,30 +48,13 @@ public class HeldItemController : MonoBehaviour
 
         if (currentHeldItem != null)
         {
-            currentHeldItem.SetHeldState();
-            Debug.Log("手持ち表示: " + currentHeldItem.itemData.itemName);
+            currentHeldItem.SetHeldState(holdPoint);
         }
     }
 
-    void FollowHandPoint()
-    {
-        if (currentHeldItem == null || handPoint == null)
-            return;
-
-        Vector3 targetPosition =
-          handPoint.position
-          + handPoint.forward * forwardDistance
-          + handPoint.right * sideOffset
-          + handPoint.up * heightOffset;
-
-        currentHeldItem.transform.position = targetPosition;
-
-        Quaternion targetRotation =
-          handPoint.rotation * Quaternion.Euler(currentHeldItem.holdRotationOffset);
-
-        currentHeldItem.transform.rotation = targetRotation;
-    }
-
+    // =========================
+    // 左クリック使用
+    // =========================
     void HandleUse()
     {
         if (currentHeldItem == null)
@@ -79,24 +66,36 @@ public class HeldItemController : MonoBehaviour
         }
     }
 
+    // =========================
+    // 右クリック回転
+    // =========================
     void HandleRotation()
     {
+        // 毎フレーム初期化
+        IsRotatingItem = false;
+
         if (currentHeldItem == null)
             return;
 
+        // 右クリック押してる間だけ回転
         if (Input.GetMouseButton(1))
         {
+            IsRotatingItem = true;
+
             float mouseX = Input.GetAxis("Mouse X");
             float mouseY = Input.GetAxis("Mouse Y");
 
-            currentHeldItem.holdRotationOffset += new Vector3(
+            currentHeldItem.AddHoldRotation(new Vector3(
               mouseY * currentHeldItem.rotateSpeed,
               -mouseX * currentHeldItem.rotateSpeed,
               0f
-            );
+            ));
         }
     }
 
+    // =========================
+    // 外部アクセス用
+    // =========================
     public PickupItem GetCurrentHeldItem()
     {
         return currentHeldItem;
@@ -105,5 +104,6 @@ public class HeldItemController : MonoBehaviour
     public void ClearHeldReference()
     {
         currentHeldItem = null;
+        IsRotatingItem = false;
     }
 }
