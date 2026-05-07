@@ -1,5 +1,4 @@
-// PickupItem：統合版（属性・材質・耐久・保持状態・使用処理対応）
-// 修正版：Kinematic Rigidbody に velocity を設定しないように順番を修正
+// PickupItem：投擲時にPickupAreaが物理干渉しないよう分離した版
 using UnityEngine;
 
 public class PickupItem : MonoBehaviour
@@ -30,6 +29,9 @@ public class PickupItem : MonoBehaviour
     [Header("材質属性")]
     public MaterialAttributeType[] materialAttributes;
 
+    [Header("拾う専用Collider")]
+    public Collider pickupArea;
+
     public bool IsHeld { get; private set; }
 
     private Vector3 currentExtraRotation;
@@ -40,7 +42,6 @@ public class PickupItem : MonoBehaviour
 
     void Awake()
     {
-        // Rigidbody は PickupItem と同じ Root に付けるのが前提
         rb = GetComponent<Rigidbody>();
 
         colliders = GetComponentsInChildren<Collider>(true);
@@ -97,7 +98,8 @@ public class PickupItem : MonoBehaviour
         IsHeld = false;
 
         SetVisible(false);
-        SetColliders(false);
+        SetPhysicsColliders(false);
+        SetPickupArea(false);
 
         StopPhysicsAndMakeKinematic();
 
@@ -114,7 +116,8 @@ public class PickupItem : MonoBehaviour
         IsHeld = true;
 
         SetVisible(true);
-        SetColliders(false);
+        SetPhysicsColliders(false);
+        SetPickupArea(false);
 
         StopPhysicsAndMakeKinematic();
 
@@ -126,9 +129,6 @@ public class PickupItem : MonoBehaviour
         if (rb == null)
             return;
 
-        // 重要：
-        // Kinematic化する前に速度を止める。
-        // Kinematic後に velocity を触るとUnityが警告を出す。
         if (rb.isKinematic)
         {
             rb.isKinematic = false;
@@ -210,16 +210,15 @@ public class PickupItem : MonoBehaviour
         transform.rotation = rotation;
 
         SetVisible(true);
-        SetColliders(true);
+        SetPhysicsColliders(true);
+        SetPickupArea(true);
 
         if (rb != null)
         {
-            // ワールドに戻す時は物理を復帰
             rb.isKinematic = false;
             rb.useGravity = true;
             rb.detectCollisions = true;
 
-            // 念のため投げる直前の速度をクリア
             rb.linearVelocity = Vector3.zero;
             rb.angularVelocity = Vector3.zero;
         }
@@ -237,7 +236,7 @@ public class PickupItem : MonoBehaviour
         if (rb != null)
         {
             rb.AddForce(force, ForceMode.Impulse);
-            Debug.Log(name + " を投げた / force=" + force + " / isKinematic=" + rb.isKinematic);
+            Debug.Log(name + " を投げた / force=" + force + " / isKinematic=" + rb.isKinematic + " / pos=" + transform.position);
         }
         else
         {
@@ -284,14 +283,25 @@ public class PickupItem : MonoBehaviour
         }
     }
 
-    void SetColliders(bool enabled)
+    void SetPhysicsColliders(bool enabled)
     {
         foreach (Collider c in colliders)
         {
-            if (c != null)
-            {
-                c.enabled = enabled;
-            }
+            if (c == null)
+                continue;
+
+            if (pickupArea != null && c == pickupArea)
+                continue;
+
+            c.enabled = enabled;
+        }
+    }
+
+    void SetPickupArea(bool enabled)
+    {
+        if (pickupArea != null)
+        {
+            pickupArea.enabled = enabled;
         }
     }
 }

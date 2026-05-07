@@ -630,6 +630,7 @@ MonoBehaviour:
   maxThrowForce: 15
   maxChargeTime: 4
   dropDistance: 1.8
+  verticalOffset: -0.2
 --- !u!114 &284271953
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1278,9 +1279,8 @@ Transform:
   m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1641807467}
-  - {fileID: 149585721}
   - {fileID: 1076178336}
+  - {fileID: 149585721}
   m_Father: {fileID: 923016476}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &583122591
@@ -1315,6 +1315,7 @@ MonoBehaviour:
     useSpeed: 8
   effectAttributes: 00000000
   materialAttributes: 02000000
+  pickupArea: {fileID: 0}
 --- !u!114 &583122592
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1925,7 +1926,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1641807467}
   m_Father: {fileID: 583122590}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1132606053
@@ -2298,7 +2300,7 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 583122590}
+  m_Father: {fileID: 1076178336}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!64 &1641807468
 MeshCollider:
