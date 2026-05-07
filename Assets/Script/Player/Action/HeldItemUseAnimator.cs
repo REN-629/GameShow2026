@@ -1,4 +1,4 @@
-// 使用時演出：アイテム側のUse設定に従って位置・回転オフセットを一時的に加える
+// 使用時演出：使用演出中かどうかを管理し、連続使用を防ぐ
 using System.Collections;
 using UnityEngine;
 
@@ -7,23 +7,26 @@ public class HeldItemUseAnimator : MonoBehaviour
     public Vector3 CurrentPositionOffset { get; private set; }
     public Vector3 CurrentRotationOffset { get; private set; }
 
+    public bool IsPlaying { get; private set; }
+
     private Coroutine currentCoroutine;
 
-    public void PlayUseAnimation(HoldPoseData pose)
+    public bool PlayUseAnimation(HoldPoseData pose)
     {
         if (pose == null)
-            return;
+            return false;
 
-        if (currentCoroutine != null)
-        {
-            StopCoroutine(currentCoroutine);
-        }
+        if (IsPlaying)
+            return false;
 
         currentCoroutine = StartCoroutine(UseAnimation(pose));
+        return true;
     }
 
     IEnumerator UseAnimation(HoldPoseData pose)
     {
+        IsPlaying = true;
+
         float speed = Mathf.Max(0.01f, pose.useSpeed);
 
         Vector3 targetPos = pose.usePositionOffset;
@@ -51,6 +54,21 @@ public class HeldItemUseAnimator : MonoBehaviour
 
         CurrentPositionOffset = Vector3.zero;
         CurrentRotationOffset = Vector3.zero;
+
+        IsPlaying = false;
         currentCoroutine = null;
+    }
+
+    public void ForceStop()
+    {
+        if (currentCoroutine != null)
+        {
+            StopCoroutine(currentCoroutine);
+            currentCoroutine = null;
+        }
+
+        CurrentPositionOffset = Vector3.zero;
+        CurrentRotationOffset = Vector3.zero;
+        IsPlaying = false;
     }
 }

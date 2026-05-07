@@ -54,22 +54,19 @@ public class ItemThrower : MonoBehaviour
     {
         if (inventory == null || heldItemController == null || cam == null)
             return;
-
         PickupItem item = heldItemController.GetCurrentHeldItem();
-
         if (item == null || !item.canThrow)
             return;
-
         float chargeRate = maxChargeTime > 0f ? currentCharge / maxChargeTime : 0f;
         float finalForce = Mathf.Lerp(minThrowForce, maxThrowForce, chargeRate);
-
-        heldItemController.ClearHeldReference();
+        // 先にインベントリから外す
         inventory.RemoveSelectedItem();
-
+        // 次に手持ち参照を消す
+        heldItemController.ClearHeldReference();
+        // 最後に必ずワールドへ戻す
         Vector3 spawnPos = cam.transform.position + cam.transform.forward * dropDistance;
-        Quaternion spawnRot = Quaternion.identity;
+        Quaternion spawnRot = cam.transform.rotation;
         Vector3 force = cam.transform.forward * finalForce;
-
         item.ThrowToWorld(spawnPos, spawnRot, force);
     }
 

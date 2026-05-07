@@ -1,4 +1,5 @@
 // 投擲衝突：投げたアイテムが一定速度以上でぶつかった時、相手と自分にダメージ処理を行う
+// 衝突音は ImpactSoundEmitter 側に分離
 using UnityEngine;
 
 public class ThrownItemImpact : MonoBehaviour
@@ -36,7 +37,6 @@ public class ThrownItemImpact : MonoBehaviour
         if (speed < minImpactSpeed)
             return;
 
-        // 相手へ属性ダメージ
         AttributeDurability target =
             collision.collider.GetComponentInParent<AttributeDurability>();
 
@@ -45,7 +45,6 @@ public class ThrownItemImpact : MonoBehaviour
             target.DamageByItem(pickupItem);
         }
 
-        // 自分自身も落下・衝突で壊れるようにする
         if (damageSelfOnImpact)
         {
             AttributeDurability self =

@@ -59,6 +59,11 @@ public class HeldItemController : MonoBehaviour
             currentHeldItem.SetStoredState();
         }
 
+        if (useAnimator != null)
+        {
+            useAnimator.ForceStop();
+        }
+
         currentHeldItem = selectedItem;
 
         if (currentHeldItem != null)
@@ -79,14 +84,21 @@ public class HeldItemController : MonoBehaviour
         if (currentHeldItem == null)
             return;
 
-        if (Input.GetMouseButtonDown(0) && currentHeldItem.canUseWithLeftClick)
-        {
-            currentHeldItem.Use();
+        if (!Input.GetMouseButtonDown(0))
+            return;
 
-            if (useAnimator != null)
-            {
-                useAnimator.PlayUseAnimation(currentHeldItem.holdPose);
-            }
+        if (!currentHeldItem.canUseWithLeftClick)
+            return;
+
+        // 使用演出中は次の使用を受け付けない
+        if (useAnimator != null && useAnimator.IsPlaying)
+            return;
+
+        currentHeldItem.Use();
+
+        if (useAnimator != null)
+        {
+            useAnimator.PlayUseAnimation(currentHeldItem.holdPose);
         }
     }
 
@@ -98,6 +110,10 @@ public class HeldItemController : MonoBehaviour
             return;
 
         if (!currentHeldItem.canRotate)
+            return;
+
+        // 使用演出中は回転させない
+        if (useAnimator != null && useAnimator.IsPlaying)
             return;
 
         if (Input.GetMouseButton(1))
@@ -124,5 +140,10 @@ public class HeldItemController : MonoBehaviour
     {
         currentHeldItem = null;
         IsRotatingItem = false;
+
+        if (useAnimator != null)
+        {
+            useAnimator.ForceStop();
+        }
     }
 }

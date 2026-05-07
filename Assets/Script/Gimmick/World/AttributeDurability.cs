@@ -1,5 +1,5 @@
-// 属性耐久：道具・壊せる壁・箱など、耐久を持つ物すべてに使う統合スクリプト
-// 被ダメSE、破壊SE、破壊エフェクトもここで管理する。
+// 属性耐久：耐久、被ダメSE、破壊SE、破壊エフェクトを管理
+// 被ダメSEと破壊SEは複数登録してランダム再生できる
 using UnityEngine;
 
 public class AttributeDurability : MonoBehaviour
@@ -28,14 +28,14 @@ public class AttributeDurability : MonoBehaviour
     [Header("材質相性を有効にする")]
     public bool useMaterialDamage = true;
 
-    [Header("被ダメSE")]
-    public AudioClip hitSE;
+    [Header("被ダメSE 複数登録可")]
+    public AudioClip[] hitSEClips;
 
     [Range(0f, 1f)]
     public float hitSEVolume = 1f;
 
-    [Header("破壊SE")]
-    public AudioClip breakSE;
+    [Header("破壊SE 複数登録可")]
+    public AudioClip[] breakSEClips;
 
     [Range(0f, 1f)]
     public float breakSEVolume = 1f;
@@ -58,8 +58,6 @@ public class AttributeDurability : MonoBehaviour
         return durability <= 0;
     }
 
-    // アイテム属性からダメージ計算して適用。
-    // 実際にダメージが入ったら true。
     public bool DamageByItem(PickupItem attacker)
     {
         if (attacker == null)
@@ -79,8 +77,6 @@ public class AttributeDurability : MonoBehaviour
         return ApplyDamage(damage);
     }
 
-    // 固定ダメージ用。
-    // 投げた物自身への衝突ダメージなどに使う。
     public bool ApplyDamage(int damage)
     {
         if (damage <= 0)
@@ -111,8 +107,6 @@ public class AttributeDurability : MonoBehaviour
     {
         int totalDamage = 0;
 
-        // 効果属性ダメージ
-        // 例：木の壁が Blunt に弱い場合、Blunt属性のバールで+1
         foreach (EffectAttributeType weak in weakEffectAttributes)
         {
             if (attacker.HasEffectAttribute(weak))
@@ -121,8 +115,6 @@ public class AttributeDurability : MonoBehaviour
             }
         }
 
-        // 材質相性ダメージ
-        // 木と木は+0、金属→木は+1
         if (useMaterialDamage)
         {
             totalDamage += CalculateMaterialDamage(attacker);
@@ -153,24 +145,18 @@ public class AttributeDurability : MonoBehaviour
 
     int GetMaterialDamage(MaterialAttributeType attacker, MaterialAttributeType target)
     {
-        // 木 → 木
-        // 同材質なので衝撃が相殺気味。材質分の追加ダメージはなし。
         if (attacker == MaterialAttributeType.Wood &&
             target == MaterialAttributeType.Wood)
         {
             return 0;
         }
 
-        // 金属 → 木
-        // バールや金属小物が木に効く。
         if (attacker == MaterialAttributeType.Metal &&
             target == MaterialAttributeType.Wood)
         {
             return 1;
         }
 
-        // 石 → 木
-        // 今後用。石を木にぶつけると効く。
         if (attacker == MaterialAttributeType.Stone &&
             target == MaterialAttributeType.Wood)
         {
@@ -182,26 +168,20 @@ public class AttributeDurability : MonoBehaviour
 
     void PlayHitSE()
     {
-        if (hitSE != null)
-        {
-            AudioSource.PlayClipAtPoint(
-                hitSE,
-                transform.position,
-                hitSEVolume
-            );
-        }
+        RandomAudioPlayer.PlayRandom(
+            hitSEClips,
+            transform.position,
+            hitSEVolume
+        );
     }
 
     void PlayBreakSE()
     {
-        if (breakSE != null)
-        {
-            AudioSource.PlayClipAtPoint(
-                breakSE,
-                transform.position,
-                breakSEVolume
-            );
-        }
+        RandomAudioPlayer.PlayRandom(
+            breakSEClips,
+            transform.position,
+            breakSEVolume
+        );
     }
 
     void SpawnBreakEffect()
