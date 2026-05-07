@@ -27,7 +27,9 @@ public class ItemThrower : MonoBehaviour
     {
         if (Input.GetKeyDown(throwKey))
         {
-            if (heldItemController != null && heldItemController.GetCurrentHeldItem() != null)
+            PickupItem item = heldItemController != null ? heldItemController.GetCurrentHeldItem() : null;
+
+            if (item != null && item.canThrow)
             {
                 isCharging = true;
                 currentCharge = 0f;
@@ -55,7 +57,7 @@ public class ItemThrower : MonoBehaviour
 
         PickupItem item = heldItemController.GetCurrentHeldItem();
 
-        if (item == null)
+        if (item == null || !item.canThrow)
             return;
 
         float chargeRate = maxChargeTime > 0f ? currentCharge / maxChargeTime : 0f;
@@ -69,7 +71,6 @@ public class ItemThrower : MonoBehaviour
         Vector3 force = cam.transform.forward * finalForce;
 
         item.ThrowToWorld(spawnPos, spawnRot, force);
-        Debug.Log("投擲: " + item.itemData.itemName + " / force=" + finalForce);
     }
 
     public float GetChargeRate()

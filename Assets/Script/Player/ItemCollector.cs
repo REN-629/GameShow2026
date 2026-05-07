@@ -1,39 +1,89 @@
-// アイテム取得：カメラ前方のPickupItemを拾ってインベントリに収納
+// アイテム取得：当たったColliderの親からPickupItem本体だけを取得して拾う
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ItemCollector : MonoBehaviour
 {
-    public Camera cam;
+    [Header("参照")]
+    public Camera playerCamera;
     public Inventory inventory;
-    public float distance = 3f;
+
+    [Header("拾う設定")]
     public KeyCode pickupKey = KeyCode.E;
+    public float pickupDistance = 3f;
+    public float pickupRadius = 0.25f;
+    public LayerMask pickupLayerMask = ~0;
+
+    [Header("UI")]
+    public GameObject pickupGuideRoot;
+    public Text pickupGuideText;
+
+    private PickupItem currentTarget;
 
     void Update()
     {
-        if (Input.GetKeyDown(pickupKey))
+        DetectPickupItem();
+        UpdatePickupUI();
+        HandlePickupInput();
+    }
+
+    void DetectPickupItem()
+    {
+        currentTarget = null;
+
+        if (playerCamera == null)
+            return;
+
+        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+
+        if (Physics.SphereCast(
+            ray,
+            pickupRadius,
+            out RaycastHit hit,
+            pickupDistance,
+            pickupLayerMask,
+            QueryTriggerInteraction.Collide))
         {
-            TryPickup();
+            PickupItem itemRoot = hit.collider.GetComponentInParent<PickupItem>();
+
+            if (itemRoot != null)
+            {
+                currentTarget = itemRoot;
+            }
         }
     }
 
-    void TryPickup()
+    void HandlePickupInput()
     {
-        if (cam == null || inventory == null)
-        {
-            Debug.LogWarning("ItemCollector の参照が未設定");
+        if (currentTarget == null || inventory == null)
             return;
-        }
 
-        Ray ray = new Ray(cam.transform.position, cam.transform.forward);
-
-        if (Physics.Raycast(ray, out RaycastHit hit, distance))
+        if (Input.GetKeyDown(pickupKey))
         {
-            PickupItem item = hit.collider.GetComponentInParent<PickupItem>();
+            bool success = inventory.AddItem(currentTarget);
 
-            if (item != null)
+            if (success)
             {
-                inventory.AddItem(item);
+                currentTarget = null;
             }
+        }
+    }
+
+    void UpdatePickupUI()
+    {
+        if (pickupGuideRoot == null)
+            return;
+
+        bool hasTarget = currentTarget != null;
+        pickupGuideRoot.SetActive(hasTarget);
+
+        if (hasTarget && pickupGuideText != null)
+        {
+            string itemName = currentTarget.itemData != null
+                ? currentTarget.itemData.itemName
+                : currentTarget.name;
+
+            pickupGuideText.text = "E： " + itemName + " を拾う";
         }
     }
 }
