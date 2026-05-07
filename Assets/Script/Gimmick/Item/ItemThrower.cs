@@ -13,7 +13,7 @@ public class ItemThrower : MonoBehaviour
     public float minThrowForce = 4f;
     public float maxThrowForce = 15f;
     public float maxChargeTime = 2f;
-    public float dropDistance = 1.2f;
+    public float dropDistance = 2.0f;
 
     private float currentCharge = 0f;
     private bool isCharging = false;

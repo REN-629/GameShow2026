@@ -1,6 +1,5 @@
 // PickupItem：統合版（属性・材質・耐久・保持状態・使用処理対応）
-// UseActionが true を返した時だけ、使用耐久が減る。
-// 空振りや無効ヒットでは耐久が減らない。
+// 修正版：Kinematic Rigidbody に velocity を設定しないように順番を修正
 using UnityEngine;
 
 public class PickupItem : MonoBehaviour
@@ -41,9 +40,16 @@ public class PickupItem : MonoBehaviour
 
     void Awake()
     {
-        rb = GetComponentInChildren<Rigidbody>(true);
+        // Rigidbody は PickupItem と同じ Root に付けるのが前提
+        rb = GetComponent<Rigidbody>();
+
         colliders = GetComponentsInChildren<Collider>(true);
         renderers = GetComponentsInChildren<Renderer>(true);
+
+        if (rb == null)
+        {
+            Debug.LogError(name + " に Rigidbody がありません。PickupItem と同じRootに Rigidbody を付けてください。");
+        }
     }
 
     public bool HasEffectAttribute(EffectAttributeType attribute)
@@ -93,15 +99,7 @@ public class PickupItem : MonoBehaviour
         SetVisible(false);
         SetColliders(false);
 
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-
-            rb.useGravity = false;
-            rb.detectCollisions = false;
-            rb.isKinematic = true;
-        }
+        StopPhysicsAndMakeKinematic();
 
         if (resetRotationOnStore)
         {
@@ -118,17 +116,30 @@ public class PickupItem : MonoBehaviour
         SetVisible(true);
         SetColliders(false);
 
-        if (rb != null)
-        {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-
-            rb.useGravity = false;
-            rb.detectCollisions = false;
-            rb.isKinematic = true;
-        }
+        StopPhysicsAndMakeKinematic();
 
         ResetHoldState();
+    }
+
+    void StopPhysicsAndMakeKinematic()
+    {
+        if (rb == null)
+            return;
+
+        // 重要：
+        // Kinematic化する前に速度を止める。
+        // Kinematic後に velocity を触るとUnityが警告を出す。
+        if (rb.isKinematic)
+        {
+            rb.isKinematic = false;
+        }
+
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        rb.useGravity = false;
+        rb.detectCollisions = false;
+        rb.isKinematic = true;
     }
 
     public void ForceHoldTransform(Transform holdPoint)
@@ -172,21 +183,19 @@ public class PickupItem : MonoBehaviour
             + currentExtraRotation
             + extraRotationOffset;
 
-        Transform itemRoot = transform;
+        transform.SetParent(null);
 
-        itemRoot.SetParent(null);
-
-        itemRoot.position =
+        transform.position =
             holdPoint.position
             + holdPoint.right * finalPositionOffset.x
             + holdPoint.up * finalPositionOffset.y
             + holdPoint.forward * finalPositionOffset.z;
 
-        itemRoot.rotation =
+        transform.rotation =
             holdPoint.rotation
             * Quaternion.Euler(finalRotationOffset);
 
-        itemRoot.localScale = baseScale;
+        transform.localScale = baseScale;
     }
 
     public void DropToWorld(
@@ -205,9 +214,14 @@ public class PickupItem : MonoBehaviour
 
         if (rb != null)
         {
+            // ワールドに戻す時は物理を復帰
             rb.isKinematic = false;
             rb.useGravity = true;
             rb.detectCollisions = true;
+
+            // 念のため投げる直前の速度をクリア
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
         }
 
         ResetHoldState();
@@ -223,6 +237,11 @@ public class PickupItem : MonoBehaviour
         if (rb != null)
         {
             rb.AddForce(force, ForceMode.Impulse);
+            Debug.Log(name + " を投げた / force=" + force + " / isKinematic=" + rb.isKinematic);
+        }
+        else
+        {
+            Debug.LogError(name + " は Rigidbody が無いため投げられません");
         }
     }
 
@@ -247,8 +266,6 @@ public class PickupItem : MonoBehaviour
         {
             bool success = action.Use(this);
 
-            // 使用が有効だった時だけ耐久を減らす。
-            // 鈍器なら「何かに有効ヒットした時だけ」減る。
             if (success && durability != null)
             {
                 durability.ApplyDamage(1);

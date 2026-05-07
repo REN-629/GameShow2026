@@ -627,9 +627,9 @@ MonoBehaviour:
   cam: {fileID: 330585545}
   throwKey: 102
   minThrowForce: 4
-  maxThrowForce: 20
+  maxThrowForce: 15
   maxChargeTime: 4
-  dropDistance: 1.2
+  dropDistance: 1.8
 --- !u!114 &284271953
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1405,6 +1405,7 @@ MonoBehaviour:
   minImpactSpeed: 4
   damageSelfOnImpact: 1
   selfDamage: 1
+  ignoreSelfDamageTime: 0.3
 --- !u!114 &583122596
 MonoBehaviour:
   m_ObjectHideFlags: 0
