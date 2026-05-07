@@ -1,41 +1,23 @@
 // PickupItem：統合版（属性・材質・耐久・保持状態・使用処理対応）
+// UseActionが true を返した時だけ、使用耐久が減る。
+// 空振りや無効ヒットでは耐久が減らない。
 using UnityEngine;
 
 public class PickupItem : MonoBehaviour
 {
-    // --------------------------------------------------
-    // 基本データ
-    // --------------------------------------------------
-
     [Header("アイテムデータ")]
     public ItemData itemData;
-
-    // --------------------------------------------------
-    // 使用設定
-    // --------------------------------------------------
 
     [Header("使用設定")]
     public bool canUseWithLeftClick = false;
 
-    // --------------------------------------------------
-    // 投擲設定
-    // --------------------------------------------------
-
     [Header("投擲設定")]
     public bool canThrow = true;
-
-    // --------------------------------------------------
-    // 回転設定
-    // --------------------------------------------------
 
     [Header("回転設定")]
     public bool canRotate = true;
     public float rotateSpeed = 3f;
     public bool resetRotationOnStore = true;
-
-    // --------------------------------------------------
-    // 持ち方
-    // --------------------------------------------------
 
     [Header("持ち方")]
     public HoldType holdType = HoldType.OneHand;
@@ -43,37 +25,13 @@ public class PickupItem : MonoBehaviour
     [Header("持ち方設定")]
     public HoldPoseData holdPose = new HoldPoseData();
 
-    // --------------------------------------------------
-    // 効果属性
-    // 「何ができるか」
-    // 例：
-    // Blunt = 殴れる
-    // Fire = 火を付けられる
-    // --------------------------------------------------
-
     [Header("効果属性")]
     public EffectAttributeType[] effectAttributes;
-
-    // --------------------------------------------------
-    // 材質属性
-    // 「何でできているか」
-    // 例：
-    // Metal = 金属
-    // Wood = 木
-    // --------------------------------------------------
 
     [Header("材質属性")]
     public MaterialAttributeType[] materialAttributes;
 
-    // --------------------------------------------------
-    // 現在手に持たれているか
-    // --------------------------------------------------
-
     public bool IsHeld { get; private set; }
-
-    // --------------------------------------------------
-    // 内部用
-    // --------------------------------------------------
 
     private Vector3 currentExtraRotation;
 
@@ -81,27 +39,14 @@ public class PickupItem : MonoBehaviour
     private Collider[] colliders;
     private Renderer[] renderers;
 
-    // --------------------------------------------------
-    // 初期化
-    // --------------------------------------------------
-
     void Awake()
     {
         rb = GetComponentInChildren<Rigidbody>(true);
-
-        colliders =
-            GetComponentsInChildren<Collider>(true);
-
-        renderers =
-            GetComponentsInChildren<Renderer>(true);
+        colliders = GetComponentsInChildren<Collider>(true);
+        renderers = GetComponentsInChildren<Renderer>(true);
     }
 
-    // --------------------------------------------------
-    // 効果属性を持っているか
-    // --------------------------------------------------
-
-    public bool HasEffectAttribute(
-        EffectAttributeType attribute)
+    public bool HasEffectAttribute(EffectAttributeType attribute)
     {
         if (effectAttributes == null)
             return false;
@@ -109,20 +54,13 @@ public class PickupItem : MonoBehaviour
         foreach (EffectAttributeType a in effectAttributes)
         {
             if (a == attribute)
-            {
                 return true;
-            }
         }
 
         return false;
     }
 
-    // --------------------------------------------------
-    // 材質属性を持っているか
-    // --------------------------------------------------
-
-    public bool HasMaterialAttribute(
-        MaterialAttributeType attribute)
+    public bool HasMaterialAttribute(MaterialAttributeType attribute)
     {
         if (materialAttributes == null)
             return false;
@@ -130,35 +68,21 @@ public class PickupItem : MonoBehaviour
         foreach (MaterialAttributeType a in materialAttributes)
         {
             if (a == attribute)
-            {
                 return true;
-            }
         }
 
         return false;
     }
-
-    // --------------------------------------------------
-    // Hold回転追加
-    // --------------------------------------------------
 
     public void AddHoldRotation(Vector3 delta)
     {
         currentExtraRotation += delta;
     }
 
-    // --------------------------------------------------
-    // Hold状態リセット
-    // --------------------------------------------------
-
     public void ResetHoldState()
     {
         currentExtraRotation = Vector3.zero;
     }
-
-    // --------------------------------------------------
-    // インベントリ収納状態
-    // --------------------------------------------------
 
     public void SetStoredState()
     {
@@ -185,10 +109,6 @@ public class PickupItem : MonoBehaviour
         }
     }
 
-    // --------------------------------------------------
-    // 手持ち状態
-    // --------------------------------------------------
-
     public void SetHeldState()
     {
         transform.SetParent(null);
@@ -210,10 +130,6 @@ public class PickupItem : MonoBehaviour
 
         ResetHoldState();
     }
-
-    // --------------------------------------------------
-    // HoldPoint追従
-    // --------------------------------------------------
 
     public void ForceHoldTransform(Transform holdPoint)
     {
@@ -273,10 +189,6 @@ public class PickupItem : MonoBehaviour
         itemRoot.localScale = baseScale;
     }
 
-    // --------------------------------------------------
-    // ワールドへ落とす
-    // --------------------------------------------------
-
     public void DropToWorld(
         Vector3 position,
         Quaternion rotation)
@@ -301,10 +213,6 @@ public class PickupItem : MonoBehaviour
         ResetHoldState();
     }
 
-    // --------------------------------------------------
-    // 投げる
-    // --------------------------------------------------
-
     public void ThrowToWorld(
         Vector3 position,
         Quaternion rotation,
@@ -318,10 +226,6 @@ public class PickupItem : MonoBehaviour
         }
     }
 
-    // --------------------------------------------------
-    // 使用
-    // --------------------------------------------------
-
     public void Use()
     {
         if (!canUseWithLeftClick)
@@ -330,7 +234,6 @@ public class PickupItem : MonoBehaviour
         AttributeDurability durability =
             GetComponent<AttributeDurability>();
 
-        // 壊れている場合は使用不可
         if (durability != null && durability.IsBroken())
         {
             Debug.Log(name + " は壊れていて使えない");
@@ -342,19 +245,16 @@ public class PickupItem : MonoBehaviour
 
         if (action != null)
         {
-            action.Use(this);
+            bool success = action.Use(this);
 
-            // 使用時に耐久を1減らす
-            if (durability != null)
+            // 使用が有効だった時だけ耐久を減らす。
+            // 鈍器なら「何かに有効ヒットした時だけ」減る。
+            if (success && durability != null)
             {
                 durability.ApplyDamage(1);
             }
         }
     }
-
-    // --------------------------------------------------
-    // Renderer ON/OFF
-    // --------------------------------------------------
 
     void SetVisible(bool visible)
     {
@@ -366,10 +266,6 @@ public class PickupItem : MonoBehaviour
             }
         }
     }
-
-    // --------------------------------------------------
-    // Collider ON/OFF
-    // --------------------------------------------------
 
     void SetColliders(bool enabled)
     {

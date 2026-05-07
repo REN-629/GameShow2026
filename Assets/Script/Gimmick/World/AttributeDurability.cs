@@ -1,4 +1,5 @@
 // 属性耐久：道具・壊せる壁・箱など、耐久を持つ物すべてに使う統合スクリプト
+// 被ダメSE、破壊SE、破壊エフェクトもここで管理する。
 using UnityEngine;
 
 public class AttributeDurability : MonoBehaviour
@@ -27,6 +28,24 @@ public class AttributeDurability : MonoBehaviour
     [Header("材質相性を有効にする")]
     public bool useMaterialDamage = true;
 
+    [Header("被ダメSE")]
+    public AudioClip hitSE;
+
+    [Range(0f, 1f)]
+    public float hitSEVolume = 1f;
+
+    [Header("破壊SE")]
+    public AudioClip breakSE;
+
+    [Range(0f, 1f)]
+    public float breakSEVolume = 1f;
+
+    [Header("破壊エフェクト")]
+    public GameObject breakEffectPrefab;
+
+    [Header("デバッグ")]
+    public bool debugLog = true;
+
     private PickupItem pickupItem;
 
     void Awake()
@@ -39,49 +58,60 @@ public class AttributeDurability : MonoBehaviour
         return durability <= 0;
     }
 
-    public void DamageByItem(PickupItem attacker)
+    // アイテム属性からダメージ計算して適用。
+    // 実際にダメージが入ったら true。
+    public bool DamageByItem(PickupItem attacker)
     {
         if (attacker == null)
-            return;
+            return false;
 
         if (ignoreDamageWhileHeld && pickupItem != null && pickupItem.IsHeld)
-            return;
+            return false;
 
         if (IsBroken())
-            return;
+            return false;
 
         int damage = CalculateDamage(attacker);
 
         if (damage <= 0)
-            return;
+            return false;
 
-        ApplyDamage(damage);
+        return ApplyDamage(damage);
     }
 
-    public void ApplyDamage(int damage)
+    // 固定ダメージ用。
+    // 投げた物自身への衝突ダメージなどに使う。
+    public bool ApplyDamage(int damage)
     {
         if (damage <= 0)
-            return;
+            return false;
 
         if (IsBroken())
-            return;
+            return false;
 
         durability -= damage;
 
-        Debug.Log(name + " に " + damage + " ダメージ / 残り耐久: " + durability);
+        PlayHitSE();
+
+        if (debugLog)
+        {
+            Debug.Log(name + " に " + damage + " ダメージ / 残り耐久: " + durability);
+        }
 
         if (durability <= 0)
         {
             durability = 0;
             Break();
         }
+
+        return true;
     }
 
     int CalculateDamage(PickupItem attacker)
     {
         int totalDamage = 0;
 
-        // 1. 効果属性ダメージ
+        // 効果属性ダメージ
         // 例：木の壁が Blunt に弱い場合、Blunt属性のバールで+1
         foreach (EffectAttributeType weak in weakEffectAttributes)
         {
@@ -91,9 +121,8 @@ public class AttributeDurability : MonoBehaviour
             }
         }
 
-        // 2. 材質相性ダメージ
-        // 木と木は相殺気味なので+0
-        // 金属で木を叩く/ぶつけると+1
+        // 材質相性ダメージ
+        // 木と木は+0、金属→木は+1
         if (useMaterialDamage)
         {
             totalDamage += CalculateMaterialDamage(attacker);
@@ -125,8 +154,7 @@ public class AttributeDurability : MonoBehaviour
     int GetMaterialDamage(MaterialAttributeType attacker, MaterialAttributeType target)
     {
         // 木 → 木
-        // 木製の物で木製の物を殴った場合、材質分は相殺される。
-        // 鈍器属性があれば、鈍器分だけで1ダメージになる。
+        // 同材質なので衝撃が相殺気味。材質分の追加ダメージはなし。
         if (attacker == MaterialAttributeType.Wood &&
             target == MaterialAttributeType.Wood)
         {
@@ -142,7 +170,7 @@ public class AttributeDurability : MonoBehaviour
         }
 
         // 石 → 木
-        // 今後、石を追加した時用。
+        // 今後用。石を木にぶつけると効く。
         if (attacker == MaterialAttributeType.Stone &&
             target == MaterialAttributeType.Wood)
         {
@@ -152,9 +180,51 @@ public class AttributeDurability : MonoBehaviour
         return 0;
     }
 
+    void PlayHitSE()
+    {
+        if (hitSE != null)
+        {
+            AudioSource.PlayClipAtPoint(
+                hitSE,
+                transform.position,
+                hitSEVolume
+            );
+        }
+    }
+
+    void PlayBreakSE()
+    {
+        if (breakSE != null)
+        {
+            AudioSource.PlayClipAtPoint(
+                breakSE,
+                transform.position,
+                breakSEVolume
+            );
+        }
+    }
+
+    void SpawnBreakEffect()
+    {
+        if (breakEffectPrefab != null)
+        {
+            Instantiate(
+                breakEffectPrefab,
+                transform.position,
+                transform.rotation
+            );
+        }
+    }
+
     void Break()
     {
-        Debug.Log(name + " が耐久切れ");
+        if (debugLog)
+        {
+            Debug.Log(name + " が耐久切れ");
+        }
+
+        PlayBreakSE();
+        SpawnBreakEffect();
 
         if (pickupItem != null)
         {
@@ -177,13 +247,21 @@ public class AttributeDurability : MonoBehaviour
 
         if (breakMode == DurabilityBreakMode.DisableUseOnly)
         {
-            Debug.Log(name + " は使用機能だけ停止した");
+            if (debugLog)
+            {
+                Debug.Log(name + " は使用機能だけ停止した");
+            }
+
             return;
         }
 
         if (breakMode == DurabilityBreakMode.KeepAsMaterial)
         {
-            Debug.Log(name + " は物体として残る");
+            if (debugLog)
+            {
+                Debug.Log(name + " は物体として残る");
+            }
+
             return;
         }
     }
