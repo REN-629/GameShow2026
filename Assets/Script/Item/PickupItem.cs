@@ -1,23 +1,6 @@
-// PickupItem：アイテム本体の一番重要なスクリプト
-//
-// このスクリプトの役割：
-// ・アイテムを「World / Held / Stored」の3状態で管理する
-// ・見た目ON/OFF、Collider ON/OFF、Rigidbody ON/OFFをまとめて切り替える
-// ・投げる時に確実にWorld状態へ戻す
-// ・効果属性、材質属性、使用処理を持つ
-//
-// 付ける場所：
-// アイテムRootに付ける。
-// 例：
-// CrowbarRoot ← PickupItem / Rigidbody / AttributeDurability / BluntUseAction
-// ├ PhysicsCollider
-// ├ PickupArea
-// └ Model
-//
-// 絶対ルール：
-// ・RigidbodyはPickupItemと同じRootに付ける
-// ・ModelにはPickupItemを付けない
-// ・PickupAreaは拾う専用Triggerにする
+//PickupItem：アイテム本体の一番重要なスクリプト
+//V2:重さの参照
+//InventoryがこのitemWeightを合計してプレイヤーの移動速度や重量ゲージに使う
 
 using UnityEngine;
 
@@ -26,6 +9,10 @@ public class PickupItem : MonoBehaviour
 {
     [Header("アイテムデータ")]
     public ItemData itemData;
+
+    [Header("重量")]
+    [Tooltip("このアイテムの重さ。最大重量100を基準にする。例：ライター2、バール12、箱30")]
+    public float itemWeight = 1f;
 
     [Header("現在の状態")]
     [SerializeField] private PickupItemState currentState = PickupItemState.World;
@@ -53,7 +40,6 @@ public class PickupItem : MonoBehaviour
     public MaterialAttributeType[] materialAttributes;
 
     [Header("拾う専用Collider")]
-    [Tooltip("子オブジェクト PickupArea の SphereCollider を入れる。Is Trigger ON 推奨。")]
     public Collider pickupArea;
 
     [Header("デバッグ")]
@@ -77,13 +63,8 @@ public class PickupItem : MonoBehaviour
 
     void Start()
     {
-        // シーンに最初から置いてあるアイテムはWorld状態にする
         ApplyWorldState();
     }
-
-    // --------------------------------------------------
-    // 属性チェック
-    // --------------------------------------------------
 
     public bool HasEffectAttribute(EffectAttributeType attribute)
     {
@@ -113,10 +94,6 @@ public class PickupItem : MonoBehaviour
         return false;
     }
 
-    // --------------------------------------------------
-    // 状態変更
-    // --------------------------------------------------
-
     public void SetWorldState()
     {
         currentState = PickupItemState.World;
@@ -135,8 +112,6 @@ public class PickupItem : MonoBehaviour
         ApplyStoredState();
     }
 
-    // World状態：地面や空中にある状態
-    // 見える、物理ON、拾う判定ON
     void ApplyWorldState()
     {
         transform.SetParent(null);
@@ -156,8 +131,6 @@ public class PickupItem : MonoBehaviour
             Debug.Log(name + " → World状態");
     }
 
-    // Held状態：手に持っている状態
-    // 見える、物理OFF、拾う判定OFF
     void ApplyHeldState()
     {
         transform.SetParent(null);
@@ -167,15 +140,12 @@ public class PickupItem : MonoBehaviour
         SetPickupArea(false);
 
         StopRigidbodyForCarry();
-
         ResetHoldRotation();
 
         if (debugStateLog)
             Debug.Log(name + " → Held状態");
     }
 
-    // Stored状態：インベントリにしまわれている状態
-    // 見えない、物理OFF、拾う判定OFF
     void ApplyStoredState()
     {
         transform.SetParent(null);
@@ -185,21 +155,17 @@ public class PickupItem : MonoBehaviour
         SetPickupArea(false);
 
         StopRigidbodyForCarry();
-
         ResetHoldRotation();
 
         if (debugStateLog)
             Debug.Log(name + " → Stored状態");
     }
 
-    // 手持ちや収納中は物理を止める
     void StopRigidbodyForCarry()
     {
         if (rb == null)
             return;
 
-        // Unity 6ではKinematic中にlinearVelocityを触ると警告が出る。
-        // なので一度isKinematicをfalseにしてから速度を0にする。
         if (rb.isKinematic)
             rb.isKinematic = false;
 
@@ -211,13 +177,8 @@ public class PickupItem : MonoBehaviour
         rb.isKinematic = true;
     }
 
-    // --------------------------------------------------
-    // 表示とCollider制御
-    // --------------------------------------------------
-
     void SetVisible(bool visible)
     {
-        // 毎回取り直す。これで「投げたのにRendererがOFFのまま」を防ぐ。
         Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
 
         foreach (Renderer r in renderers)
@@ -236,7 +197,6 @@ public class PickupItem : MonoBehaviour
             if (c == null)
                 continue;
 
-            // PickupAreaは拾う専用なので物理Colliderとは別扱い
             if (pickupArea != null && c == pickupArea)
                 continue;
 
@@ -249,10 +209,6 @@ public class PickupItem : MonoBehaviour
         if (pickupArea != null)
             pickupArea.enabled = enabled;
     }
-
-    // --------------------------------------------------
-    // HoldPoint追従
-    // --------------------------------------------------
 
     public void AddHoldRotation(Vector3 delta)
     {
@@ -293,10 +249,6 @@ public class PickupItem : MonoBehaviour
         transform.localScale = baseScale;
     }
 
-    // --------------------------------------------------
-    // ワールド配置・投擲
-    // --------------------------------------------------
-
     public void DropToWorld(Vector3 position, Quaternion rotation)
     {
         transform.position = position;
@@ -327,10 +279,6 @@ public class PickupItem : MonoBehaviour
         Debug.Log(name + " を投げた / pos=" + transform.position + " / force=" + force + " / state=" + currentState);
     }
 
-    // --------------------------------------------------
-    // 使用
-    // --------------------------------------------------
-
     public void Use()
     {
         if (!canUseWithLeftClick)
@@ -351,7 +299,6 @@ public class PickupItem : MonoBehaviour
 
         bool success = action.Use(this);
 
-        // 空振りなら耐久を減らさない
         if (success && durability != null)
         {
             durability.ApplyDamage(1);
