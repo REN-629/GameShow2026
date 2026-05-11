@@ -1,7 +1,6 @@
-// AttributeDurability：耐久を持つ物すべてに使う
-//
-// 道具にも、木箱にも、壊れる壁にも使える。
-// ダメージ計算、被ダメSE、破壊SE、破壊エフェクトを管理する。
+// AttributeDurability：耐久を持つ物すべてに使うスクリプト
+// BreakPoint対応版 + Fireなど効果属性単体ダメージ対応版。
+// 木箱・壊れる壁・道具などに使える。
 
 using UnityEngine;
 
@@ -46,6 +45,12 @@ public class AttributeDurability : MonoBehaviour
     [Header("破壊エフェクト")]
     public GameObject breakEffectPrefab;
 
+    [Header("破壊エフェクト出現位置")]
+    public Transform breakPoint;
+
+    [Header("破壊エフェクトの向き")]
+    public bool useBreakPointRotation = true;
+
     [Header("デバッグ")]
     public bool debugLog = true;
 
@@ -80,6 +85,32 @@ public class AttributeDurability : MonoBehaviour
         return ApplyDamage(damage);
     }
 
+    // ライターの火・電気・爆発など、効果属性だけでダメージを入れる時に使う。
+    public bool DamageByEffect(EffectAttributeType effect, int damage)
+    {
+        if (IsBroken())
+            return false;
+
+        if (!IsWeakToEffect(effect))
+            return false;
+
+        return ApplyDamage(damage);
+    }
+
+    bool IsWeakToEffect(EffectAttributeType effect)
+    {
+        if (weakEffectAttributes == null)
+            return false;
+
+        foreach (EffectAttributeType weak in weakEffectAttributes)
+        {
+            if (weak == effect)
+                return true;
+        }
+
+        return false;
+    }
+
     public bool ApplyDamage(int damage)
     {
         if (damage <= 0)
@@ -93,9 +124,7 @@ public class AttributeDurability : MonoBehaviour
         RandomAudioPlayer.PlayRandom(hitSEClips, transform.position, hitSEVolume);
 
         if (debugLog)
-        {
             Debug.Log(name + " に " + damage + " ダメージ / 残り耐久: " + durability);
-        }
 
         if (durability <= 0)
         {
@@ -113,15 +142,11 @@ public class AttributeDurability : MonoBehaviour
         foreach (EffectAttributeType weak in weakEffectAttributes)
         {
             if (attacker.HasEffectAttribute(weak))
-            {
                 totalDamage += 1;
-            }
         }
 
         if (useMaterialDamage)
-        {
             totalDamage += CalculateMaterialDamage(attacker);
-        }
 
         return totalDamage;
     }
@@ -146,38 +171,22 @@ public class AttributeDurability : MonoBehaviour
 
     int GetMaterialDamage(MaterialAttributeType attacker, MaterialAttributeType target)
     {
-        // 木→木は相殺。材質分は0。
-        if (attacker == MaterialAttributeType.Wood &&
-            target == MaterialAttributeType.Wood)
-        {
+        if (attacker == MaterialAttributeType.Wood && target == MaterialAttributeType.Wood)
             return 0;
-        }
 
-        // 金属→木は有効。
-        if (attacker == MaterialAttributeType.Metal &&
-            target == MaterialAttributeType.Wood)
-        {
+        if (attacker == MaterialAttributeType.Metal && target == MaterialAttributeType.Wood)
             return 1;
-        }
 
-        // 石→木も有効。
-        if (attacker == MaterialAttributeType.Stone &&
-            target == MaterialAttributeType.Wood)
-        {
+        if (attacker == MaterialAttributeType.Stone && target == MaterialAttributeType.Wood)
             return 1;
-        }
 
         return 0;
     }
 
     void Break()
     {
-        RandomAudioPlayer.PlayRandom(breakSEClips, transform.position, breakSEVolume);
-
-        if (breakEffectPrefab != null)
-        {
-            Instantiate(breakEffectPrefab, transform.position, transform.rotation);
-        }
+        RandomAudioPlayer.PlayRandom(breakSEClips, GetBreakEffectPosition(), breakSEVolume);
+        SpawnBreakEffect();
 
         if (pickupItem != null)
         {
@@ -188,15 +197,37 @@ public class AttributeDurability : MonoBehaviour
                 pickupItem.canThrow = false;
         }
 
+        if (debugLog)
+            Debug.Log(name + " は耐久0になった / mode=" + breakMode);
+
         if (breakMode == DurabilityBreakMode.DestroyObject)
         {
             Destroy(gameObject);
             return;
         }
+    }
 
-        if (debugLog)
-        {
-            Debug.Log(name + " は耐久0になった / mode=" + breakMode);
-        }
+    void SpawnBreakEffect()
+    {
+        if (breakEffectPrefab == null)
+            return;
+
+        Instantiate(breakEffectPrefab, GetBreakEffectPosition(), GetBreakEffectRotation());
+    }
+
+    Vector3 GetBreakEffectPosition()
+    {
+        if (breakPoint != null)
+            return breakPoint.position;
+
+        return transform.position;
+    }
+
+    Quaternion GetBreakEffectRotation()
+    {
+        if (breakPoint != null && useBreakPointRotation)
+            return breakPoint.rotation;
+
+        return transform.rotation;
     }
 }
