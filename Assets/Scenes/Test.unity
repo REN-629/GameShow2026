@@ -547,9 +547,8 @@ GameObject:
   m_Component:
   - component: {fileID: 284271949}
   - component: {fileID: 284271951}
-  - component: {fileID: 284271950}
-  - component: {fileID: 284271953}
   - component: {fileID: 284271952}
+  - component: {fileID: 284271953}
   - component: {fileID: 284271954}
   m_Layer: 0
   m_Name: ItemManager
@@ -573,21 +572,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1241428534}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &284271950
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 284271948}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5061ec0d21b1c494bba5f9447b32253a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  maxSlots: 3
-  slots: []
-  selectedIndex: 0
 --- !u!114 &284271951
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -597,11 +581,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 284271948}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 14d3b4330d00ce941973727cd5b84341, type: 3}
+  m_Script: {fileID: 11500000, guid: 4287ac8265a73ce43a4a0a3f0eafba6c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   playerCamera: {fileID: 330585545}
-  inventory: {fileID: 284271950}
+  inventory: {fileID: 1241428535}
   pickupKey: 101
   pickupDistance: 3
   pickupRadius: 0.25
@@ -619,17 +603,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 284271948}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 465038a90cab51b4c8cfe79765fb5189, type: 3}
+  m_Script: {fileID: 11500000, guid: ddca15eb6e02dbd429d12a648839b49c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventory: {fileID: 284271950}
+  inventory: {fileID: 1241428535}
   heldItemController: {fileID: 284271953}
   cam: {fileID: 330585545}
-  throwKey: 102
-  minThrowForce: 4
-  maxThrowForce: 15
-  maxChargeTime: 4
-  dropDistance: 1.8
+  throwKey: 103
+  minThrowForce: 1
+  maxThrowForce: 25
+  maxChargeTime: 2
+  dropDistance: 2
   verticalOffset: -0.2
 --- !u!114 &284271953
 MonoBehaviour:
@@ -640,10 +624,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 284271948}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f41a65bcdd4de842b1dcd132daead67, type: 3}
+  m_Script: {fileID: 11500000, guid: 282f2ca82bb5fb14c9c37c392370ebff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventory: {fileID: 284271950}
+  inventory: {fileID: 1241428535}
   holdPointManager: {fileID: 1132606055}
   useAnimator: {fileID: 284271954}
 --- !u!114 &284271954
@@ -655,7 +639,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 284271948}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7020454ee4c81e148bc7cde2618e86be, type: 3}
+  m_Script: {fileID: 11500000, guid: a841dfd9c3494614fbe9febc060723e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &308077160
@@ -1275,7 +1259,7 @@ Transform:
   m_GameObject: {fileID: 583122589}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.7702, y: 1.38, z: -7.3297405}
+  m_LocalPosition: {x: 0.7702, y: 2.21, z: -7.57}
   m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1292,30 +1276,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 583122589}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8d62b88fbe168148a045b8d213a2a95, type: 3}
+  m_Script: {fileID: 11500000, guid: 276ce314afd44e340b44ecae66257285, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   itemData:
     itemName: "\u30D0\u30FC\u30EB"
-    attributes:
-    - id: metal
-    - id: blunt
+    attributes: []
+  currentState: 0
   canUseWithLeftClick: 1
   canThrow: 1
   canRotate: 0
   rotateSpeed: 3
-  resetRotationOnStore: 1
-  holdType: 1
+  holdType: 0
   holdPose:
-    positionOffset: {x: 0.3, y: 0.2, z: 0}
-    rotationOffset: {x: 0, y: 65, z: 10}
-    scale: {x: 1, y: 1, z: 1}
-    usePositionOffset: {x: -1, y: -1, z: 1}
-    useRotationOffset: {x: 0, y: -60, z: 50}
-    useSpeed: 8
+    positionOffset: {x: 0, y: 0, z: 0}
+    rotationOffset: {x: 0, y: 60, z: 0}
+    scale: {x: 3, y: 3, z: 3}
+    usePositionOffset: {x: -1.5, y: -1, z: 0.5}
+    useRotationOffset: {x: 50, y: -10, z: 70}
+    useSpeed: 12
   effectAttributes: 00000000
   materialAttributes: 02000000
-  pickupArea: {fileID: 0}
+  pickupArea: {fileID: 149585722}
+  debugStateLog: 1
 --- !u!114 &583122592
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1325,16 +1308,16 @@ MonoBehaviour:
   m_GameObject: {fileID: 583122589}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ef872f556090774fbaad5452ec06b1e, type: 3}
+  m_Script: {fileID: 11500000, guid: 0c03ec078e496504db08afca36c1d3be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  durability: 6
+  durability: 5
   breakMode: 0
   disableUseOnBreak: 1
   disableThrowOnBreak: 0
   ignoreDamageWhileHeld: 1
   materialAttributes: 02000000
-  weakEffectAttributes: 000000000100000003000000
+  weakEffectAttributes: 030000000200000001000000
   useMaterialDamage: 1
   hitSEClips: []
   hitSEVolume: 1
@@ -1378,13 +1361,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 583122589}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5c1aaa2d009c8c349a86656553f8c46f, type: 3}
+  m_Script: {fileID: 11500000, guid: 368ff307ae6cd0d46946fdf393d62204, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useSEClips:
-  - {fileID: 8300000, guid: 9f0830a2513489c44833b4c0a4616acc, type: 3}
-  - {fileID: 8300000, guid: a1f5dd8e0c70ec14493fe8f39a3044d2, type: 3}
-  - {fileID: 8300000, guid: 178def1f57153ed40b72ed69be0d027d, type: 3}
+  useSEClips: []
   useSEVolume: 1
   playerCamera: {fileID: 330585545}
   hitDistance: 2
@@ -1399,7 +1379,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 583122589}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2081e796da51ed4409ea17ebbf905b41, type: 3}
+  m_Script: {fileID: 11500000, guid: 1e7766e9601281a4e946528a1bf753bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   pickupItem: {fileID: 583122591}
@@ -1416,20 +1396,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 583122589}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 01ebdde3338e2354e87989a70daaaa93, type: 3}
+  m_Script: {fileID: 11500000, guid: e5b309b72b563aa43ad1c2ea83b62cab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weakImpactSEClips:
-  - {fileID: 8300000, guid: 388c2a34b07c4f84caee45da9a50862f, type: 3}
-  mediumImpactSEClips:
-  - {fileID: 8300000, guid: 167ea917cbe4b914885f4f68ba98ed3c, type: 3}
-  strongImpactSEClips:
-  - {fileID: 8300000, guid: 8e7ace78491e0d84ba2fb4f2e486589c, type: 3}
+  weakImpactSEClips: []
+  mediumImpactSEClips: []
+  strongImpactSEClips: []
   volume: 1
   weakSpeed: 0.3
   mediumSpeed: 3
   strongSpeed: 7
-  soundCooldown: 2
+  soundCooldown: 0.12
   muteWhileHeld: 1
 --- !u!1 &684052068
 GameObject:
@@ -1535,13 +1512,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 764525534}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.8, y: 0.54, z: 1.311}
+  m_LocalRotation: {x: 0.04127623, y: 0.13248916, z: 0.06821698, w: 0.9879723}
+  m_LocalPosition: {x: 1, y: -0.53, z: 1.16}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 330585546}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 3.64, y: 15.543, z: 8.397}
 --- !u!114 &764525536
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1551,7 +1528,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 764525534}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc7b74d9749d0954783243cfdd106708, type: 3}
+  m_Script: {fileID: 11500000, guid: a0ab623dce68bd741a7da1b7e5d3b5c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   playerController: {fileID: 1241428532}
@@ -1892,7 +1869,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b850d8a73fd8374e830fe3b69520829, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventory: {fileID: 284271950}
+  inventory: {fileID: 1241428535}
   slots:
   - {fileID: 2037141192}
   - {fileID: 256589581}
@@ -1971,7 +1948,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1132606053}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fa4b90dcbb43b454cbe8cce88d561aee, type: 3}
+  m_Script: {fileID: 11500000, guid: db7f6f788cf705745aaeff9b8172e034, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   oneHandHoldPoint: {fileID: 764525535}
@@ -2016,7 +1993,7 @@ MonoBehaviour:
   gravity: 20
   playerCamera: {fileID: 330585545}
   lookSpeed: 8
-  lookXLimit: 45
+  lookXLimit: 80
   animator: {fileID: 0}
   heldItemController: {fileID: 284271953}
   moveDirection: {x: 0, y: 0, z: 0}
@@ -2074,12 +2051,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 1241428531}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f41a65bcdd4de842b1dcd132daead67, type: 3}
+  m_Script: {fileID: 11500000, guid: 5061ec0d21b1c494bba5f9447b32253a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  inventory: {fileID: 284271950}
-  holdPointManager: {fileID: 1132606055}
-  useAnimator: {fileID: 284271954}
+  maxSlots: 4
+  slots: []
+  selectedIndex: 0
 --- !u!1 &1589603552
 GameObject:
   m_ObjectHideFlags: 0
@@ -2109,7 +2086,7 @@ Transform:
   m_GameObject: {fileID: 1589603552}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -7.95, y: 1.4, z: -8.47}
+  m_LocalPosition: {x: -9.15, y: 1.4, z: -3.94}
   m_LocalScale: {x: 3, y: 3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2198,7 +2175,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1589603552}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7ef872f556090774fbaad5452ec06b1e, type: 3}
+  m_Script: {fileID: 11500000, guid: 0c03ec078e496504db08afca36c1d3be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   durability: 3
@@ -2207,7 +2184,7 @@ MonoBehaviour:
   disableThrowOnBreak: 0
   ignoreDamageWhileHeld: 1
   materialAttributes: 01000000
-  weakEffectAttributes: 00000000010000000300000002000000
+  weakEffectAttributes: 00000000010000000200000003000000
   useMaterialDamage: 1
   hitSEClips: []
   hitSEVolume: 1
@@ -2575,7 +2552,7 @@ Transform:
   m_GameObject: {fileID: 1966333755}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.052, y: -0.323, z: 0.48}
+  m_LocalPosition: {x: 0.05, y: -0.3, z: 0.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2590,7 +2567,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1966333755}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fc7b74d9749d0954783243cfdd106708, type: 3}
+  m_Script: {fileID: 11500000, guid: a0ab623dce68bd741a7da1b7e5d3b5c4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   playerController: {fileID: 1241428532}
