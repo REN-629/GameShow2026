@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1468189245949798459}
   - component: {fileID: 4943317263162571380}
   - component: {fileID: 4855881067792744759}
+  - component: {fileID: 1790268110319124396}
   m_Layer: 0
   m_Name: BreakEffect_StoneV2
   m_TagString: Untagged
@@ -68,17 +69,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   anchor: -1
   chunks: 80
-  density: 0
+  density: 80
   internalStrength: 0
   insideMaterial: {fileID: 2100000, guid: 0a86f11c94723d548a97e49c4224d54a, type: 2}
   outsideMaterial: {fileID: -4740866918696808673, guid: ae3459f40eace6943ae977695718d0d3, type: 3}
-  originalVisualRoot: {fileID: 0}
-  autoFindModelChild: 1
-  disableOriginalRenderers: 1
-  disableOriginalColliders: 1
-  disableOriginalVisualRootObject: 1
-  hideRootObjectAfterFracture: 0
+  hideOriginalAfterFracture: 1
   fractureOnlyOnce: 1
+  debugLog: 1
+--- !u!114 &1790268110319124396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1125696813818823770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cca64195ef1223a4f9b42266be7ff03b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lifeTime: 5
+  shrinkTime: 1
+  freezeRigidbodyWhenShrink: 1
+  destroyRootAfterShrink: 1
   debugLog: 1
 --- !u!1 &3210357381593194965
 GameObject:
@@ -91,6 +104,7 @@ GameObject:
   - component: {fileID: 1875131890183529399}
   - component: {fileID: 3060029231103954957}
   - component: {fileID: 5658421290071521939}
+  - component: {fileID: 5159728595867623704}
   m_Layer: 0
   m_Name: model
   m_TagString: Untagged
@@ -166,3 +180,30 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!54 &5159728595867623704
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3210357381593194965}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0

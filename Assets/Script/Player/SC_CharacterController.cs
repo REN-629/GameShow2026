@@ -109,4 +109,35 @@ public class SC_CharacterController : MonoBehaviour
         animator.SetFloat("MoveZ", animZ, 0.1f, Time.deltaTime);
         animator.SetBool("IsGrounded", stableGrounded);
     }
+    
+    
+    //キャラクターがリジットボディに触れると押し出せる
+    void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        //当たった相手のRigidbody取得
+        Rigidbody rb = hit.collider.attachedRigidbody;
+
+        //Rigidbodyが無いなら何もしない
+        if (rb == null)
+            return;
+
+        //固定されてる物は押さない
+        if (rb.isKinematic)
+            return;
+
+        //下方向は押さない
+        if (hit.moveDirection.y < -0.3f)
+            return;
+
+        //プレイヤーが進んだ方向
+        Vector3 pushDir = new Vector3(
+            hit.moveDirection.x,
+            0f,
+            hit.moveDirection.z
+        );
+
+        //力を加える
+        rb.AddForce(pushDir *   1f, ForceMode.Impulse);
+    }
+
 }

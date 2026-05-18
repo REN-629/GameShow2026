@@ -1,3 +1,6 @@
+// ChunkNode：破片同士のつながりを管理するノード
+// 修正点：Joint / Rigidbody / connectedBody がnullでも落ちにくいように安全化。
+
 using System.Collections.Generic;
 using System.Linq;
 using Project.Scripts.Utils;
@@ -9,13 +12,16 @@ namespace Project.Scripts.Fractures
     {
         public HashSet<ChunkNode> Neighbours = new HashSet<ChunkNode>();
         public ChunkNode[] NeighboursArray = new ChunkNode[0];
+
         private Dictionary<Joint, ChunkNode> JointToChunk = new Dictionary<Joint, ChunkNode>();
         private Dictionary<ChunkNode, Joint> ChunkToJoint = new Dictionary<ChunkNode, Joint>();
+
         private Rigidbody rb;
         private Vector3 frozenPos;
-        private Quaternion forzenRot;
+        private Quaternion frozenRot;
         private bool frozen;
-        public bool IsStatic => rb.isKinematic;
+
+        public bool IsStatic => rb != null && rb.isKinematic;
         public Color Color { get; set; } = Color.black;
         public bool HasBrokenLinks { get; private set; }
 
@@ -26,36 +32,51 @@ namespace Project.Scripts.Fractures
 
         private void FixedUpdate()
         {
-            // Kinda hacky, but otherwise the chunks slowly drift apart.
             if (frozen)
             {
                 transform.position = frozenPos;
-                transform.rotation = forzenRot;
+                transform.rotation = frozenRot;
             }
         }
 
         public void Setup()
         {
             rb = GetComponent<Rigidbody>();
+
+            if (rb == null)
+            {
+                Debug.LogWarning(name + " に Rigidbody が無いため ChunkNode.Setup を中断");
+                return;
+            }
+
             Freeze();
 
             JointToChunk.Clear();
             ChunkToJoint.Clear();
-            foreach (var joint in GetComponents<Joint>())
+
+            foreach (Joint joint in GetComponents<Joint>())
             {
-                var chunk = joint.connectedBody.GetOrAddComponent<ChunkNode>();
+                if (joint == null)
+                    continue;
+
+                if (joint.connectedBody == null)
+                    continue;
+
+                ChunkNode chunk = joint.connectedBody.GetOrAddComponent<ChunkNode>();
+
                 JointToChunk[joint] = chunk;
                 ChunkToJoint[chunk] = joint;
             }
 
-            foreach (var chunkNode in ChunkToJoint.Keys)
+            foreach (ChunkNode chunkNode in ChunkToJoint.Keys)
             {
+                if (chunkNode == null)
+                    continue;
+
                 Neighbours.Add(chunkNode);
 
                 if (chunkNode.Contains(this) == false)
-                {
                     chunkNode.Neighbours.Add(this);
-                }
             }
 
             NeighboursArray = Neighbours.ToArray();
@@ -68,16 +89,20 @@ namespace Project.Scripts.Fractures
 
         public void CleanBrokenLinks()
         {
-            var brokenLinks = JointToChunk.Keys.Where(j => j == false).ToList();
-            foreach (var link in brokenLinks)
+            List<Joint> brokenLinks = JointToChunk.Keys.Where(j => j == null).ToList();
+
+            foreach (Joint link in brokenLinks)
             {
-                var body = JointToChunk[link];
+                ChunkNode body = JointToChunk[link];
 
                 JointToChunk.Remove(link);
-                ChunkToJoint.Remove(body);
 
-                body.Remove(this);
-                Neighbours.Remove(body);
+                if (body != null)
+                {
+                    ChunkToJoint.Remove(body);
+                    body.Remove(this);
+                    Neighbours.Remove(body);
+                }
             }
 
             NeighboursArray = Neighbours.ToArray();
@@ -86,6 +111,9 @@ namespace Project.Scripts.Fractures
 
         private void Remove(ChunkNode chunkNode)
         {
+            if (chunkNode == null)
+                return;
+
             ChunkToJoint.Remove(chunkNode);
             Neighbours.Remove(chunkNode);
             NeighboursArray = Neighbours.ToArray();
@@ -94,6 +122,10 @@ namespace Project.Scripts.Fractures
         public void Unfreeze()
         {
             frozen = false;
+
+            if (rb == null)
+                return;
+
             rb.constraints = RigidbodyConstraints.None;
             rb.useGravity = true;
             rb.gameObject.layer = LayerMask.NameToLayer("Default");
@@ -101,18 +133,26 @@ namespace Project.Scripts.Fractures
 
         private void Freeze()
         {
+            if (rb == null)
+                return;
+
             frozen = true;
             rb.constraints = RigidbodyConstraints.FreezeAll;
             rb.useGravity = false;
             rb.gameObject.layer = LayerMask.NameToLayer("FrozenChunks");
             frozenPos = rb.transform.position;
-            forzenRot = rb.transform.rotation;
+            frozenRot = rb.transform.rotation;
         }
 
         private void OnDrawGizmos()
         {
-            var worldCenterOfMass = transform.TransformPoint(transform.GetComponent<Rigidbody>().centerOfMass);
-            
+            Rigidbody body = GetComponent<Rigidbody>();
+
+            if (body == null)
+                return;
+
+            Vector3 worldCenterOfMass = transform.TransformPoint(body.centerOfMass);
+
             if (IsStatic)
             {
                 Gizmos.color = Color.red;
@@ -123,13 +163,13 @@ namespace Project.Scripts.Fractures
                 Gizmos.color = Color.SetAlpha(0.5f);
                 Gizmos.DrawSphere(worldCenterOfMass, 0.1f);
             }
-            
-            foreach (var joint in JointToChunk.Keys)
+
+            foreach (Joint joint in JointToChunk.Keys)
             {
-                if (joint)
+                if (joint && joint.connectedBody != null && rb != null)
                 {
-                    var from = transform.TransformPoint(rb.centerOfMass);
-                    var to = joint.connectedBody.transform.TransformPoint(joint.connectedBody.centerOfMass);
+                    Vector3 from = transform.TransformPoint(rb.centerOfMass);
+                    Vector3 to = joint.connectedBody.transform.TransformPoint(joint.connectedBody.centerOfMass);
                     Gizmos.color = Color;
                     Gizmos.DrawLine(from, to);
                 }
@@ -138,11 +178,18 @@ namespace Project.Scripts.Fractures
 
         private void OnDrawGizmosSelected()
         {
-            foreach (var node in Neighbours)
+            foreach (ChunkNode node in Neighbours)
             {
-                var mesh = node.GetComponent<MeshFilter>().mesh;
+                if (node == null)
+                    continue;
+
+                MeshFilter meshFilter = node.GetComponent<MeshFilter>();
+
+                if (meshFilter == null || meshFilter.mesh == null)
+                    continue;
+
                 Gizmos.color = Color.yellow.SetAlpha(.2f);
-                Gizmos.DrawMesh(mesh, node.transform.position, node.transform.rotation);
+                Gizmos.DrawMesh(meshFilter.mesh, node.transform.position, node.transform.rotation);
             }
         }
     }
