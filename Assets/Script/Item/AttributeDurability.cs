@@ -213,6 +213,10 @@ public class AttributeDurability : MonoBehaviour
             return;
 
         Instantiate(breakEffectPrefab, GetBreakEffectPosition(), GetBreakEffectRotation());
+
+        //破片の座標
+        Debug.Log("BreakEffect spawn = " + GetBreakEffectPosition());
+        Debug.Log("BreakPoint = " + (breakPoint != null ? breakPoint.position.ToString() : "null"));
     }
 
     Vector3 GetBreakEffectPosition()
