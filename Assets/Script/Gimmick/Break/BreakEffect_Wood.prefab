@@ -481,7 +481,7 @@ MonoBehaviour:
   randomDirectionAmount: 0
   minTorque: 0
   maxTorque: 0.1
-  lifeTime: 5
+  lifeTime: 10
   shrinkTime: 0.6
 --- !u!1 &1509277051100656384
 GameObject:

@@ -106,10 +106,28 @@ public class PickupItem : MonoBehaviour
         ApplyHeldState();
     }
 
-    public void SetStoredState()
+    public void SetStoredState(bool forceTurnOffToggle = true)
     {
+        ToggleUseAction toggle = GetComponent<ToggleUseAction>();
+
+        if (forceTurnOffToggle && toggle != null)
+        {
+            toggle.ForceTurnOff();
+        }
+
         currentState = PickupItemState.Stored;
+
         ApplyStoredState();
+
+
+        //エネルギー系アイテムを持ってない時にオフにする
+        //ToggleUseAction toggle = GetComponent<ToggleUseAction>();
+
+        // if (toggle != null)
+        //{
+        //   toggle.ForceTurnOff();
+        //}
+
     }
 
     void ApplyWorldState()

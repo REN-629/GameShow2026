@@ -1,6 +1,10 @@
-// FlashlightUseAction：懐中電灯専用の使用処理
-// 左クリックでON/OFF。
-// ON中だけSpotLightなどのライト用GameObjectを有効にする。
+// FlashlightUseAction：懐中電灯専用
+//
+// 物理耐久：AttributeDurability
+// エネルギー耐久：ToggleUseAction の remainingUseSeconds
+//
+// ON中だけSpotLightなどを有効化する。
+// 投げてもON状態は維持される。
 
 using UnityEngine;
 
@@ -29,10 +33,5 @@ public class FlashlightUseAction : ToggleUseAction
             if (obj != null)
                 obj.SetActive(visible);
         }
-    }
-
-    void OnDisable()
-    {
-        SetLightVisible(false);
     }
 }

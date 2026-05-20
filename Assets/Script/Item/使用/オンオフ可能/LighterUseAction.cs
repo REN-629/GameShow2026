@@ -1,7 +1,10 @@
-// LighterUseAction：ライター専用の使用処理
-// 左クリックでON/OFF。
-// ON中だけ火の見た目を出し、前方に火判定を出す。
-// Fireに弱いAttributeDurabilityへ継続ダメージを与える。
+// LighterUseAction：ライター専用
+//
+// 物理耐久：AttributeDurability
+// エネルギー耐久：ToggleUseAction の remainingUseSeconds
+//
+// ON中だけ火を表示して、Fireに弱い物へ継続ダメージを入れる。
+// 投げてもON状態は維持される。
 
 using UnityEngine;
 
@@ -67,22 +70,31 @@ public class LighterUseAction : ToggleUseAction
         Transform origin = flamePoint != null ? flamePoint : transform;
         Ray ray = new Ray(origin.position, origin.forward);
 
-        if (Physics.SphereCast(ray, fireRadius, out RaycastHit hit, fireDistance, fireLayerMask, QueryTriggerInteraction.Ignore))
+        if (Physics.SphereCast(
+            ray,
+            fireRadius,
+            out RaycastHit hit,
+            fireDistance,
+            fireLayerMask,
+            QueryTriggerInteraction.Ignore))
         {
-            AttributeDurability target = hit.collider.GetComponentInParent<AttributeDurability>();
+            AttributeDurability target =
+                hit.collider.GetComponentInParent<AttributeDurability>();
 
             if (target != null)
             {
-                bool damaged = target.DamageByEffect(EffectAttributeType.Fire, fireDamage);
+                bool damaged =
+                    target.DamageByEffect(EffectAttributeType.Fire, fireDamage);
 
                 if (debugFireHit)
-                    Debug.Log(damaged ? "火ダメージ成功: " + target.name : "火は効かなかった: " + target.name);
+                {
+                    Debug.Log(
+                        damaged
+                        ? "火ダメージ成功: " + target.name
+                        : "火は効かなかった: " + target.name
+                    );
+                }
             }
         }
-    }
-
-    void OnDisable()
-    {
-        SetFlameVisible(false);
     }
 }

@@ -1,10 +1,8 @@
-// Inventory：固定スロット式のインベントリ
-// 追加点：重量システム
-//
-// 仕組み：
-// PickupItem.itemWeight を全部足して、合計重量を出す。
-// 最大重量100なら、合計100で移動倍率0。
-// InventoryWeightGaugeUI はこの重量を見てゲージを動かす。
+//インベントリと重量で変動する移動速度
+
+//PickupItem.itemWeight を全部足して合計重量を出す
+//最大重量100なら合計100で移動倍率0
+//InventoryWeightGaugeUI はこの重量を見てゲージを動かす
 
 using UnityEngine;
 
@@ -51,7 +49,11 @@ public class Inventory : MonoBehaviour
             if (slots[i] == null)
             {
                 slots[i] = item;
-                item.SetStoredState();
+
+                //item.SetStoredState();　下の使うのでいらない
+                bool willBeSelectedSlot = i == selectedIndex;
+                item.SetStoredState(!willBeSelectedSlot);
+
 
                 Debug.Log("取得: " + GetItemName(item) + " / slot=" + i);
                 Debug.Log("重量: " + GetCurrentWeight() + " / " + maxWeight);
