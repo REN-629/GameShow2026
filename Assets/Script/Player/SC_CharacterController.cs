@@ -1,16 +1,23 @@
 using UnityEngine;
-// プレイヤーコントローラー：移動、ダッシュ、ジャンプ、視点、アニメーション連携
+//プレイヤーコントローラー　移動、ダッシュ、ジャンプ、視点、アニメーション連携
 [RequireComponent(typeof(CharacterController))]
 public class SC_CharacterController : MonoBehaviour
 {
+    //移動速度
     public float speed = 7.5f;
     public float dashSpeed = 12.0f;
     public KeyCode dashKey = KeyCode.LeftShift;
-    public float jumpSpeed = 8.0f;
-    public float gravity = 20.0f;
+
+    //ジャンプ力
+    public float jumpSpeed = 6.0f;
+    public float gravity = 35.0f;
+
+    //視点移動
     public Camera playerCamera;
     public float lookSpeed = 2.0f;
     public float lookXLimit = 45.0f;
+
+
     public Animator animator;
     public HeldItemController heldItemController;
     private CharacterController characterController;
@@ -23,10 +30,16 @@ public class SC_CharacterController : MonoBehaviour
     public bool isDashing = false;
     private float inputX;
     private float inputZ;
-    // アニメ用の安定化接地判定
+    //安定接地判定
     private bool stableGrounded;
     private float groundedRememberTime = 0.1f;
     private float groundedTimer = 0f;
+
+    //動きのカクカクさをどうにかする用
+    [Header("空中操作")]
+    public float airControlSmooth = 8f;
+    public float groundControlSmooth = 20f;
+
     void Start()
     {
         characterController = GetComponent<CharacterController>();
@@ -41,10 +54,13 @@ public class SC_CharacterController : MonoBehaviour
     void HandleMovement()
     {
         bool rawGrounded = characterController.isGrounded;
+
         inputZ = canMove ? Input.GetAxisRaw("Vertical") : 0f;
         inputX = canMove ? Input.GetAxisRaw("Horizontal") : 0f;
+
         if (Mathf.Abs(inputZ) < 0.1f) inputZ = 0f;
         if (Mathf.Abs(inputX) < 0.1f) inputX = 0f;
+
         if (rawGrounded)
         {
             groundedTimer = groundedRememberTime;
@@ -58,34 +74,86 @@ public class SC_CharacterController : MonoBehaviour
                 stableGrounded = false;
             }
         }
-        if (rawGrounded)
+
+        Vector3 forward = transform.TransformDirection(Vector3.forward);
+        Vector3 right = transform.TransformDirection(Vector3.right);
+
+        bool hasMovementInput =
+            Mathf.Abs(inputZ) > 0.1f ||
+            Mathf.Abs(inputX) > 0.1f;
+
+        isDashing =
+            canMove &&
+            hasMovementInput &&
+            Input.GetKey(dashKey);
+
+        float currentSpeed = isDashing ? dashSpeed : speed;
+
+        Vector3 horizontalMove =
+            (forward * inputZ + right * inputX) * currentSpeed;
+
+        //空中では前後左右移動ができない(旧)
+        /*if (rawGrounded)
         {
             Vector3 forward = transform.TransformDirection(Vector3.forward);
             Vector3 right = transform.TransformDirection(Vector3.right);
-            bool hasMovementInput = Mathf.Abs(inputZ) > 0.1f || Mathf.Abs(inputX) > 0.1f;
-            isDashing = canMove && hasMovementInput && Input.GetKey(dashKey);
+            bool hasMovementInput = Mathf.Abs(inputZ) > 0.1f || Mathf.Abs(inputX) > 0.1f; isDashing = canMove && hasMovementInput && Input.GetKey(dashKey);
             float currentSpeed = isDashing ? dashSpeed : speed;
             moveDirection = (forward * inputZ + right * inputX) * currentSpeed;
-            // 接地中は少し下向きにして接地を安定させる
+
+            //接地中は少し下向きにして接地を安定させる
             moveDirection.y = -2f;
+        }*/
+
+        //空中でも移動できるようにする(新)
+
+        //これだとカクカクな動きになる
+        //moveDirection.x = horizontalMove.x;
+        //moveDirection.z = horizontalMove.z;
+        //カクカクさを軽減
+        float smooth = rawGrounded ? groundControlSmooth : airControlSmooth;
+
+        moveDirection.x = Mathf.Lerp(
+            moveDirection.x,
+            horizontalMove.x,
+            Time.deltaTime * smooth
+        );
+
+        moveDirection.z = Mathf.Lerp(
+            moveDirection.z,
+            horizontalMove.z,
+            Time.deltaTime * smooth
+        );
+
+        if (rawGrounded)
+        {
+            moveDirection.y = -2f;
+
             if (Input.GetButtonDown("Jump") && canMove)
             {
                 moveDirection.y = jumpSpeed;
+
+                //ダッシュジャンプ時に速すぎてフワッとするのを防ぐ
+                moveDirection.x *= 0.75f;
+                moveDirection.z *= 0.75f;
+
                 if (animator != null)
                 {
                     animator.SetTrigger("Jump");
                 }
+
                 stableGrounded = false;
                 groundedTimer = 0f;
             }
         }
         else
         {
-            isDashing = false;
             moveDirection.y -= gravity * Time.deltaTime;
         }
+
         characterController.Move(moveDirection * Time.deltaTime);
     }
+
     void HandleLook()
     {
         bool isRotatingItem = heldItemController != null && heldItemController.IsRotatingItem;

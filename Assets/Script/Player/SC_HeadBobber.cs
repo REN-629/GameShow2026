@@ -22,9 +22,17 @@ public class SC_HeadBobber : MonoBehaviour
 
     void Update()
     {
-        bool isMoving =
-          Mathf.Abs(controller.moveDirection.x) > 0.1f ||
-          Mathf.Abs(controller.moveDirection.z) > 0.1f;
+        //‚±‚ê‚¾‚Æ‹ó’†‚Å‚à—h‚ê‚Ä•Ï‚ÉŒ©‚¦‚é
+        //bool isMoving =
+        //  Mathf.Abs(controller.moveDirection.x) > 0.1f ||
+        //  Mathf.Abs(controller.moveDirection.z) > 0.1f;
+
+        //‹ó’†‚Å‚Í—h‚ê‚È‚¢‚æ‚¤‚É‚·‚é
+        bool isMoving = controller.GetComponent<CharacterController>().isGrounded &&
+        (
+            Mathf.Abs(controller.moveDirection.x) > 0.1f ||
+            Mathf.Abs(controller.moveDirection.z) > 0.1f
+        );
 
         if (isMoving)
         {
