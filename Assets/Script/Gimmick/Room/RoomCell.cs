@@ -1,15 +1,10 @@
-// RoomCell：部屋1つ分の管理
-//
-// 役割:
-// ・部屋のグリッド座標を持つ
-// ・出口パターングループを持つ
-// ・プレイヤーが入ったら現在部屋にする
-// ・周囲の部屋生成を呼ぶ
+//部屋1つ分の管理
 
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))]
+//一旦無しで試す
+//[RequireComponent(typeof(Collider))]
 public class RoomCell : MonoBehaviour
 {
     [Header("この部屋のグリッド座標")]
