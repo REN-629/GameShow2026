@@ -1,13 +1,3 @@
-// InfiniteRoomGenerator：無限部屋生成の本体
-//
-// 仕様:
-// ・現在部屋の東西南北に、未生成なら部屋を1つずつ生成
-// ・部屋Prefabはランダム
-// ・出口パターンもランダム
-// ・DoorSpawnPointに扉Prefabをランダム生成
-// ・PuzzleSpawnPointにパズルPrefabをランダム生成
-// ・生成された扉はRoomPuzzleState.roomDoorsへ自動登録
-
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -35,6 +25,12 @@ public class InfiniteRoomGenerator : MonoBehaviour
     [Header("生成設定")]
     public bool forceGenerateAllDirections = true;
 
+    [Header("接続ドア設定")]
+    public bool preventDoubleDoors = true;
+
+    [Tooltip("ONなら、新しく生成された部屋の来た方向にはドアを生成しない")]
+    public bool blockDoorOnCameFromSide = true;
+
     [Header("デバッグ")]
     public bool debugLog = true;
 
@@ -49,9 +45,7 @@ public class InfiniteRoomGenerator : MonoBehaviour
             startRoom.generator = this;
 
             RegisterRoom(startRoom);
-
             SetupRoom(startRoom, null);
-
             GenerateAround(startRoom);
         }
     }
@@ -81,6 +75,7 @@ public class InfiniteRoomGenerator : MonoBehaviour
         TryGenerateDirection(centerRoom, RoomDirection.West);
 
         RefreshRoomDoors(centerRoom);
+        ApplyWallSwitcher(centerRoom);
     }
 
     void TryGenerateDirection(RoomCell fromRoom, RoomDirection direction)
@@ -89,7 +84,11 @@ public class InfiniteRoomGenerator : MonoBehaviour
             fromRoom.gridPosition + DirectionToGridOffset(direction);
 
         if (generatedRooms.ContainsKey(targetGrid))
+        {
+            RefreshRoomDoors(fromRoom);
+            ApplyWallSwitcher(fromRoom);
             return;
+        }
 
         if (!forceGenerateAllDirections)
         {
@@ -104,7 +103,8 @@ public class InfiniteRoomGenerator : MonoBehaviour
         if (prefab == null)
             return;
 
-        GameObject obj = Instantiate(prefab, GridToWorld(targetGrid), Quaternion.identity);
+        GameObject obj =
+            Instantiate(prefab, GridToWorld(targetGrid), Quaternion.identity);
 
         RoomCell newRoom = obj.GetComponent<RoomCell>();
 
@@ -126,13 +126,16 @@ public class InfiniteRoomGenerator : MonoBehaviour
 
         SetupRoom(newRoom, cameFrom);
 
+        RefreshRoomDoors(fromRoom);
+        ApplyWallSwitcher(fromRoom);
+
         if (debugLog)
         {
             Debug.Log(
-                "部屋生成: " + targetGrid
-                + " / from=" + fromRoom.gridPosition
-                + " / dir=" + direction
-                + " / prefab=" + prefab.name
+                "部屋生成: " + targetGrid +
+                " / from=" + fromRoom.gridPosition +
+                " / dir=" + direction +
+                " / prefab=" + prefab.name
             );
         }
     }
@@ -140,7 +143,9 @@ public class InfiniteRoomGenerator : MonoBehaviour
     void SetupRoom(RoomCell room, RoomDirection? cameFromDirection)
     {
         SetupRoomExitPatterns(room, cameFromDirection);
+        BlockCameFromDoorIfNeeded(room, cameFromDirection);
         SpawnDoorsForRoom(room);
+        ApplyWallSwitcher(room);
         SpawnPuzzleForRoom(room);
     }
 
@@ -165,6 +170,38 @@ public class InfiniteRoomGenerator : MonoBehaviour
         }
     }
 
+    void BlockCameFromDoorIfNeeded(RoomCell room, RoomDirection? cameFromDirection)
+    {
+        if (!preventDoubleDoors)
+            return;
+
+        if (!blockDoorOnCameFromSide)
+            return;
+
+        if (!cameFromDirection.HasValue)
+            return;
+
+        RoomExitPatternGroup group = room.GetExitGroup(cameFromDirection.Value);
+
+        if (group == null)
+            return;
+
+        RoomDoorSpawnPoint spawnPoint = group.GetSelectedDoorSpawnPoint();
+
+        if (spawnPoint == null)
+            return;
+
+        spawnPoint.BlockDoorByConnection();
+
+        if (debugLog)
+        {
+            Debug.Log(
+                room.name + " / " + cameFromDirection.Value +
+                " は接続済みなのでドア生成をブロック"
+            );
+        }
+    }
+
     public void SpawnDoorsForRoom(RoomCell room)
     {
         if (room == null || room.exitGroups == null)
@@ -182,7 +219,7 @@ public class InfiniteRoomGenerator : MonoBehaviour
             if (spawnPoint == null)
                 continue;
 
-            if (!spawnPoint.spawnDoor)
+            if (!spawnPoint.CanSpawnDoor())
                 continue;
 
             if (spawnPoint.spawnedDoor != null)
@@ -216,6 +253,17 @@ public class InfiniteRoomGenerator : MonoBehaviour
 
         if (puzzleState != null)
             puzzleState.roomDoors = roomDoors.ToArray();
+    }
+
+    void ApplyWallSwitcher(RoomCell room)
+    {
+        if (room == null)
+            return;
+
+        RoomWallSwitcher switcher = room.GetComponent<RoomWallSwitcher>();
+
+        if (switcher != null)
+            switcher.Apply(room);
     }
 
     public void SpawnPuzzleForRoom(RoomCell room)
