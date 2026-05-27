@@ -1,7 +1,5 @@
-// RoomPuzzleSpawner：部屋内にランダムパズルを生成する
-//
-// 部屋PrefabのRootに付ける。
-// InfiniteRoomGeneratorからSpawnPuzzle()が呼ばれる。
+//部屋内にランダムにパズルを生成する
+
 
 using UnityEngine;
 

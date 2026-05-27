@@ -1,3 +1,11 @@
+// InfiniteRoomGenerator.cs
+//
+// 修正版:
+// ・北などの固定出口は forceExit で必ず出口
+// ・それ以外は RoomExitPatternGroup 側で通常壁 or 出口をランダムにする
+// ・通常壁になった方向にはドアを生成しない
+// ・接続している来た方向は出口として強制し、ドアは二重防止でブロックできる
+
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -90,6 +98,7 @@ public class InfiniteRoomGenerator : MonoBehaviour
             return;
         }
 
+        // その方向に出口が無いなら、部屋を生成しない設定も可能
         if (!forceGenerateAllDirections)
         {
             RoomExitPatternGroup fromGroup = fromRoom.GetExitGroup(direction);
@@ -132,10 +141,10 @@ public class InfiniteRoomGenerator : MonoBehaviour
         if (debugLog)
         {
             Debug.Log(
-                "部屋生成: " + targetGrid +
-                " / from=" + fromRoom.gridPosition +
-                " / dir=" + direction +
-                " / prefab=" + prefab.name
+                "部屋生成: " + targetGrid
+                + " / from=" + fromRoom.gridPosition
+                + " / dir=" + direction
+                + " / prefab=" + prefab.name
             );
         }
     }
@@ -159,13 +168,17 @@ public class InfiniteRoomGenerator : MonoBehaviour
             if (group == null)
                 continue;
 
+            // 来た方向は接続する必要があるので、必ず出口にする
             if (cameFromDirection.HasValue && group.direction == cameFromDirection.Value)
             {
+                group.forceExit = true;
                 group.enableExit = true;
                 group.SelectRandomPattern();
                 continue;
             }
 
+            // それ以外はGroup側の設定に従って
+            // 通常壁 or 出口をランダム決定
             group.SelectRandomPattern();
         }
     }
@@ -196,8 +209,10 @@ public class InfiniteRoomGenerator : MonoBehaviour
         if (debugLog)
         {
             Debug.Log(
-                room.name + " / " + cameFromDirection.Value +
-                " は接続済みなのでドア生成をブロック"
+                room.name
+                + " / "
+                + cameFromDirection.Value
+                + " は接続済みなのでドア生成をブロック"
             );
         }
     }
@@ -212,6 +227,9 @@ public class InfiniteRoomGenerator : MonoBehaviour
         foreach (RoomExitPatternGroup group in room.exitGroups)
         {
             if (group == null)
+                continue;
+
+            if (!group.enableExit)
                 continue;
 
             RoomDoorSpawnPoint spawnPoint = group.GetSelectedDoorSpawnPoint();

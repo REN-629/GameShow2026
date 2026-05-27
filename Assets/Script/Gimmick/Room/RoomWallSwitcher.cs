@@ -1,3 +1,16 @@
+// RoomWallSwitcher.cs
+//
+// 通常壁と出口パターンを切り替えるスクリプト。
+//
+// 出口が選ばれた方向:
+//   Wall_NorthなどをOFF
+//   ExitGroup_Northの選択済みPatternをON
+//
+// 通常壁が選ばれた方向:
+//   Wall_NorthなどをON
+//   ExitGroup_NorthのPatternは全部OFF
+//
+// 部屋PrefabのRootに付ける。
 
 using UnityEngine;
 
@@ -25,9 +38,6 @@ public class RoomWallSwitcher : MonoBehaviour
 
     void ApplyDirection(RoomCell room, RoomDirection direction, GameObject wall)
     {
-        if (wall == null)
-            return;
-
         RoomExitPatternGroup group = room.GetExitGroup(direction);
 
         bool hasActiveExit =
@@ -35,15 +45,19 @@ public class RoomWallSwitcher : MonoBehaviour
             group.enableExit &&
             group.selectedPattern != null;
 
-        // 出口があるなら普通壁OFF、出口がないなら普通壁ON
-        wall.SetActive(!hasActiveExit);
+        if (wall != null)
+            wall.SetActive(!hasActiveExit);
 
         if (debugLog)
         {
             Debug.Log(
-                name + " / " + direction +
-                " / wall=" + wall.name +
-                " / active=" + wall.activeSelf
+                name
+                + " / "
+                + direction
+                + " / exit="
+                + hasActiveExit
+                + " / wall="
+                + (wall != null ? wall.name : "none")
             );
         }
     }

@@ -1,7 +1,13 @@
-// DoorController：下にスライドして開く扉
+// DoorController.cs
 //
-// パズルクリア時にRoomPuzzleStateからOpen()を呼ばれる。
-// 破壊する場合はAttributeDurability/FractureThisと併用可能。
+// 扉を下にスライドして開く / 元の位置へ戻して閉じるスクリプト
+//
+// 役割:
+// ・Open() で下にスライドして開く
+// ・Close() で元の位置に戻って閉じる
+//
+// 重量ボタンのような
+// 「押している間だけ開く」仕組みに対応するため、Close()を追加した版。
 
 using System.Collections;
 using UnityEngine;
@@ -13,15 +19,23 @@ public class DoorController : MonoBehaviour
 
     [Header("開く設定")]
     public float slideDownDistance = 3f;
-    public float openSpeed = 2f;
+    public float moveSpeed = 2f;
 
-    [Header("開いた後にColliderを切る")]
+    [Header("Collider設定")]
+    [Tooltip("開いた時に扉のColliderを切る")]
     public bool disableCollidersWhenOpen = true;
+
+    [Tooltip("閉じた時に扉のColliderを戻す")]
+    public bool enableCollidersWhenClosed = true;
+
+    [Header("デバッグ")]
+    public bool debugLog = true;
 
     private Vector3 closedLocalPosition;
     private Vector3 openLocalPosition;
+
     private bool isOpen = false;
-    private Coroutine openRoutine;
+    private Coroutine moveRoutine;
 
     public bool IsOpen => isOpen;
 
@@ -41,40 +55,68 @@ public class DoorController : MonoBehaviour
 
         isOpen = true;
 
-        if (openRoutine != null)
-            StopCoroutine(openRoutine);
+        if (debugLog)
+            Debug.Log(name + " を開きます");
 
-        openRoutine = StartCoroutine(OpenRoutine());
+        StartMove(openLocalPosition, true);
     }
 
-    IEnumerator OpenRoutine()
+    public void Close()
     {
-        while (Vector3.Distance(doorBody.localPosition, openLocalPosition) > 0.01f)
+        if (!isOpen)
+            return;
+
+        isOpen = false;
+
+        if (debugLog)
+            Debug.Log(name + " を閉じます");
+
+        // 閉じ始める時点でColliderを戻す
+        if (enableCollidersWhenClosed)
+            SetDoorColliders(true);
+
+        StartMove(closedLocalPosition, false);
+    }
+
+    void StartMove(Vector3 targetLocalPosition, bool opening)
+    {
+        if (moveRoutine != null)
+            StopCoroutine(moveRoutine);
+
+        moveRoutine = StartCoroutine(MoveRoutine(targetLocalPosition, opening));
+    }
+
+    IEnumerator MoveRoutine(Vector3 targetLocalPosition, bool opening)
+    {
+        while (Vector3.Distance(doorBody.localPosition, targetLocalPosition) > 0.01f)
         {
             doorBody.localPosition =
                 Vector3.MoveTowards(
                     doorBody.localPosition,
-                    openLocalPosition,
-                    openSpeed * Time.deltaTime
+                    targetLocalPosition,
+                    moveSpeed * Time.deltaTime
                 );
 
             yield return null;
         }
 
-        doorBody.localPosition = openLocalPosition;
+        doorBody.localPosition = targetLocalPosition;
 
-        if (disableCollidersWhenOpen)
-            DisableColliders();
+        if (opening && disableCollidersWhenOpen)
+            SetDoorColliders(false);
     }
 
-    void DisableColliders()
+    void SetDoorColliders(bool enabled)
     {
+        if (doorBody == null)
+            return;
+
         Collider[] colliders = doorBody.GetComponentsInChildren<Collider>(true);
 
         foreach (Collider col in colliders)
         {
             if (col != null)
-                col.enabled = false;
+                col.enabled = enabled;
         }
     }
 }

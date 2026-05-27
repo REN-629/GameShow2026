@@ -1,15 +1,21 @@
-// RoomExitPatternGroup：方向ごとの出口パターン管理
+// RoomExitPatternGroup.cs
+//
+// 方向ごとの出口パターン管理。
+//
+// 修正版:
+// ・北など、必ず出口にしたい方向を forceExit で固定できる
+// ・それ以外の方向は、通常壁 or 出口をランダムにできる
+// ・通常壁が選ばれた場合は出口パターンを全部OFFにする
 //
 // 例:
 // ExitGroup_North
-// ├ Pattern_01
-// ├ Pattern_02
-// └ Pattern_03
+//   forceExit = true
+//   → 必ず出口
 //
-// 役割:
-// ・この出口が北/南/東/西どれか覚える
-// ・複数パターンから1つだけランダム表示する
-// ・選ばれなかったパターンは非表示にする
+// ExitGroup_South / East / West
+//   randomizeWallOrExit = true
+//   exitChance = 0.5
+//   → 50%で出口、50%で普通壁
 
 using UnityEngine;
 
@@ -17,6 +23,18 @@ public class RoomExitPatternGroup : MonoBehaviour
 {
     [Header("方向")]
     public RoomDirection direction;
+
+    [Header("出口固定")]
+    [Tooltip("ONなら、この方向は必ず出口になる。北出口固定などに使う")]
+    public bool forceExit = false;
+
+    [Header("壁/出口ランダム")]
+    [Tooltip("ONなら、通常壁にするか出口にするかをランダムで決める")]
+    public bool randomizeWallOrExit = true;
+
+    [Range(0f, 1f)]
+    [Tooltip("出口になる確率。0なら必ず壁、1なら必ず出口")]
+    public float exitChance = 0.5f;
 
     [Header("この方向に出口を作る")]
     public bool enableExit = true;
@@ -40,10 +58,16 @@ public class RoomExitPatternGroup : MonoBehaviour
         if (patterns == null || patterns.Length == 0)
             patterns = GetComponentsInChildren<RoomExitPattern>(true);
 
+        DecideWallOrExit();
+
         if (!enableExit)
         {
             SetAllPatternsActive(false);
             selectedPattern = null;
+
+            if (debugLog)
+                Debug.Log(name + " は通常壁 / dir=" + direction);
+
             return;
         }
 
@@ -63,7 +87,32 @@ public class RoomExitPatternGroup : MonoBehaviour
         }
 
         if (debugLog)
-            Debug.Log(name + " selected " + selectedPattern.name + " / dir=" + direction);
+        {
+            Debug.Log(
+                name
+                + " selected "
+                + selectedPattern.name
+                + " / dir="
+                + direction
+            );
+        }
+    }
+
+    void DecideWallOrExit()
+    {
+        if (forceExit)
+        {
+            enableExit = true;
+            return;
+        }
+
+        if (!randomizeWallOrExit)
+        {
+            // Inspectorで設定したenableExitをそのまま使う
+            return;
+        }
+
+        enableExit = Random.value <= exitChance;
     }
 
     void SetAllPatternsActive(bool active)
@@ -83,6 +132,9 @@ public class RoomExitPatternGroup : MonoBehaviour
 
     public RoomDoorSpawnPoint GetSelectedDoorSpawnPoint()
     {
+        if (!enableExit)
+            return null;
+
         if (selectedPattern == null)
             return null;
 
@@ -91,6 +143,9 @@ public class RoomExitPatternGroup : MonoBehaviour
 
     public DoorController GetSpawnedDoor()
     {
+        if (!enableExit)
+            return null;
+
         if (selectedPattern == null)
             return null;
 

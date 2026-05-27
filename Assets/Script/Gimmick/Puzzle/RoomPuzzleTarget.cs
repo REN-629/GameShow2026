@@ -1,25 +1,50 @@
-// RoomPuzzleTarget：生成されたパズルが対象部屋を直接持つための補助
+// RoomPuzzleTarget.cs
 //
-// 基本はRoomRuntimeManager.CurrentRoomを使えばOK。
-// ただし将来的に「現在部屋に依存しないパズル」にしたい時、
-// targetRoomを直接使えるようにする。
+// パズルPrefabが「どの部屋をクリア/解除するか」を持つための補助スクリプト
+//
+// InfiniteRoomGenerator / RoomPuzzleSpawner によって
+// 生成時に targetRoom が自動設定される想定。
+//
+// targetRoomが無い場合は RoomRuntimeManager.CurrentRoom を使う。
 
 using UnityEngine;
 
 public class RoomPuzzleTarget : MonoBehaviour
 {
-    [Header("このパズルがクリアする部屋")]
+    [Header("このパズルが操作する部屋")]
     public RoomPuzzleState targetRoom;
 
-    public void ClearTargetRoom()
+    public void SetCleared(bool cleared)
     {
-        if (targetRoom != null)
+        RoomPuzzleState room = GetTargetRoom();
+
+        if (room == null)
         {
-            targetRoom.ClearPuzzle();
+            Debug.LogWarning(name + " 対象RoomPuzzleStateがありません");
             return;
         }
 
+        room.SetPuzzleState(cleared);
+    }
+
+    public void ClearTargetRoom()
+    {
+        SetCleared(true);
+    }
+
+    public void ResetTargetRoom()
+    {
+        SetCleared(false);
+    }
+
+    RoomPuzzleState GetTargetRoom()
+    {
+        if (targetRoom != null)
+            return targetRoom;
+
         if (RoomRuntimeManager.Instance != null)
-            RoomRuntimeManager.Instance.ClearCurrentRoomPuzzle();
+            return RoomRuntimeManager.Instance.currentRoom;
+
+        return null;
     }
 }

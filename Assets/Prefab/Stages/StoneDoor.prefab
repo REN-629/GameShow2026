@@ -220,9 +220,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   doorBody: {fileID: 7577263964383678519}
-  slideDownDistance: 3
-  openSpeed: 2
+  slideDownDistance: 6.5
+  moveSpeed: 2
   disableCollidersWhenOpen: 1
+  enableCollidersWhenClosed: 1
+  debugLog: 1
 --- !u!1 &6193000910237422448
 GameObject:
   m_ObjectHideFlags: 0
