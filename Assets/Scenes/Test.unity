@@ -1871,7 +1871,7 @@ Transform:
   m_GameObject: {fileID: 461163650}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.8, y: 3.33, z: -12.94}
+  m_LocalPosition: {x: 0.8, y: 3.33, z: -8.13}
   m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3216,6 +3216,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   direction: 2
+  forceExit: 0
+  randomizeWallOrExit: 1
+  exitChance: 0.5
   enableExit: 1
   patterns: []
   selectedPattern: {fileID: 1844866296}
@@ -3364,6 +3367,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   direction: 0
+  forceExit: 0
+  randomizeWallOrExit: 1
+  exitChance: 0.5
   enableExit: 1
   patterns:
   - {fileID: 924891995}
@@ -6824,6 +6830,7 @@ MonoBehaviour:
   forceGenerateAllDirections: 1
   preventDoubleDoors: 1
   blockDoorOnCameFromSide: 1
+  hideCameFromExitPattern: 1
   debugLog: 1
 --- !u!4 &1515741196
 Transform:
@@ -7290,6 +7297,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   direction: 1
+  forceExit: 0
+  randomizeWallOrExit: 1
+  exitChance: 0.5
   enableExit: 1
   patterns: []
   selectedPattern: {fileID: 1437939128}
@@ -7623,6 +7633,7 @@ MonoBehaviour:
   wallSouth: {fileID: 1170321763}
   wallEast: {fileID: 1039190376}
   wallWest: {fileID: 1738711872}
+  autoFindWallsByName: 1
   debugLog: 0
 --- !u!114 &1813365294
 MonoBehaviour:
@@ -7654,9 +7665,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roomDoors:
   - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
   puzzleCleared: 0
   debugLog: 1
 --- !u!65 &1813365296
@@ -7678,8 +7686,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 30, y: 30, z: 30}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 28, y: 30, z: 28}
+  m_Center: {x: 0, y: 0, z: 0.7975545}
 --- !u!1 &1827735566
 GameObject:
   m_ObjectHideFlags: 0
@@ -8374,6 +8382,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   direction: 3
+  forceExit: 0
+  randomizeWallOrExit: 1
+  exitChance: 0.5
   enableExit: 1
   patterns:
   - {fileID: 587192660}

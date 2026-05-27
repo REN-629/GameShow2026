@@ -1,10 +1,23 @@
 // InfiniteRoomGenerator.cs
 //
-// 修正版:
-// ・北などの固定出口は forceExit で必ず出口
-// ・それ以外は RoomExitPatternGroup 側で通常壁 or 出口をランダムにする
-// ・通常壁になった方向にはドアを生成しない
-// ・接続している来た方向は出口として強制し、ドアは二重防止でブロックできる
+// 接続先側の出口/ドア重複対策版
+//
+// 修正内容:
+// ・今いる部屋から新しい部屋を生成した時、
+//   新しい部屋の「来た方向」は接続済み扱いにする
+//
+// 例:
+// 今いる部屋から北へ新部屋生成
+//
+// 今いる部屋 North:
+//   出口表示あり
+//   ドア生成あり
+//
+// 新しい部屋 South:
+//   接続済みなので出口パターン非表示
+//   ドア生成なし
+//
+// これで、接続部分にドアや出口壁が二重に出る問題を防ぐ。
 
 using System.Collections.Generic;
 using UnityEngine;
@@ -38,6 +51,9 @@ public class InfiniteRoomGenerator : MonoBehaviour
 
     [Tooltip("ONなら、新しく生成された部屋の来た方向にはドアを生成しない")]
     public bool blockDoorOnCameFromSide = true;
+
+    [Tooltip("ONなら、新しく生成された部屋の来た方向の出口見た目も非表示にする")]
+    public bool hideCameFromExitPattern = true;
 
     [Header("デバッグ")]
     public bool debugLog = true;
@@ -98,7 +114,6 @@ public class InfiniteRoomGenerator : MonoBehaviour
             return;
         }
 
-        // その方向に出口が無いなら、部屋を生成しない設定も可能
         if (!forceGenerateAllDirections)
         {
             RoomExitPatternGroup fromGroup = fromRoom.GetExitGroup(direction);
@@ -131,10 +146,13 @@ public class InfiniteRoomGenerator : MonoBehaviour
 
         RegisterRoom(newRoom);
 
+        // 新部屋から見ると、来た方向は反対方向
         RoomDirection cameFrom = GetOpposite(direction);
 
+        // 新部屋側は cameFrom を接続済みとしてセットアップ
         SetupRoom(newRoom, cameFrom);
 
+        // 元部屋側は通常通りドア/壁状態を更新
         RefreshRoomDoors(fromRoom);
         ApplyWallSwitcher(fromRoom);
 
@@ -153,6 +171,8 @@ public class InfiniteRoomGenerator : MonoBehaviour
     {
         SetupRoomExitPatterns(room, cameFromDirection);
         BlockCameFromDoorIfNeeded(room, cameFromDirection);
+        HideCameFromExitPatternIfNeeded(room, cameFromDirection);
+
         SpawnDoorsForRoom(room);
         ApplyWallSwitcher(room);
         SpawnPuzzleForRoom(room);
@@ -168,7 +188,8 @@ public class InfiniteRoomGenerator : MonoBehaviour
             if (group == null)
                 continue;
 
-            // 来た方向は接続する必要があるので、必ず出口にする
+            // 来た方向は接続する必要があるので、一旦出口として選ぶ
+            // その後、HideCameFromExitPatternIfNeeded()で見た目だけ消す
             if (cameFromDirection.HasValue && group.direction == cameFromDirection.Value)
             {
                 group.forceExit = true;
@@ -177,7 +198,7 @@ public class InfiniteRoomGenerator : MonoBehaviour
                 continue;
             }
 
-            // それ以外はGroup側の設定に従って
+            // それ以外はRoomExitPatternGroup側の設定で、
             // 通常壁 or 出口をランダム決定
             group.SelectRandomPattern();
         }
@@ -194,12 +215,14 @@ public class InfiniteRoomGenerator : MonoBehaviour
         if (!cameFromDirection.HasValue)
             return;
 
-        RoomExitPatternGroup group = room.GetExitGroup(cameFromDirection.Value);
+        RoomExitPatternGroup group =
+            room.GetExitGroup(cameFromDirection.Value);
 
         if (group == null)
             return;
 
-        RoomDoorSpawnPoint spawnPoint = group.GetSelectedDoorSpawnPoint();
+        RoomDoorSpawnPoint spawnPoint =
+            group.GetSelectedDoorSpawnPoint();
 
         if (spawnPoint == null)
             return;
@@ -214,6 +237,36 @@ public class InfiniteRoomGenerator : MonoBehaviour
                 + cameFromDirection.Value
                 + " は接続済みなのでドア生成をブロック"
             );
+        }
+    }
+
+    void HideCameFromExitPatternIfNeeded(RoomCell room, RoomDirection? cameFromDirection)
+    {
+        if (!hideCameFromExitPattern)
+            return;
+
+        if (!cameFromDirection.HasValue)
+            return;
+
+        RoomExitPatternGroup group =
+            room.GetExitGroup(cameFromDirection.Value);
+
+        if (group == null)
+            return;
+
+        if (group.selectedPattern != null)
+        {
+            group.selectedPattern.gameObject.SetActive(false);
+
+            if (debugLog)
+            {
+                Debug.Log(
+                    room.name
+                    + " / "
+                    + cameFromDirection.Value
+                    + " は接続済みなので出口パターンを非表示"
+                );
+            }
         }
     }
 
@@ -232,7 +285,8 @@ public class InfiniteRoomGenerator : MonoBehaviour
             if (!group.enableExit)
                 continue;
 
-            RoomDoorSpawnPoint spawnPoint = group.GetSelectedDoorSpawnPoint();
+            RoomDoorSpawnPoint spawnPoint =
+                group.GetSelectedDoorSpawnPoint();
 
             if (spawnPoint == null)
                 continue;
@@ -259,7 +313,8 @@ public class InfiniteRoomGenerator : MonoBehaviour
                     room.transform
                 );
 
-            DoorController door = doorObj.GetComponent<DoorController>();
+            DoorController door =
+                doorObj.GetComponent<DoorController>();
 
             spawnPoint.spawnedDoor = door;
 
@@ -267,7 +322,8 @@ public class InfiniteRoomGenerator : MonoBehaviour
                 roomDoors.Add(door);
         }
 
-        RoomPuzzleState puzzleState = room.GetComponent<RoomPuzzleState>();
+        RoomPuzzleState puzzleState =
+            room.GetComponent<RoomPuzzleState>();
 
         if (puzzleState != null)
             puzzleState.roomDoors = roomDoors.ToArray();
@@ -278,7 +334,8 @@ public class InfiniteRoomGenerator : MonoBehaviour
         if (room == null)
             return;
 
-        RoomWallSwitcher switcher = room.GetComponent<RoomWallSwitcher>();
+        RoomWallSwitcher switcher =
+            room.GetComponent<RoomWallSwitcher>();
 
         if (switcher != null)
             switcher.Apply(room);
@@ -289,12 +346,14 @@ public class InfiniteRoomGenerator : MonoBehaviour
         if (room == null)
             return;
 
-        RoomPuzzleSpawner spawner = room.GetComponent<RoomPuzzleSpawner>();
+        RoomPuzzleSpawner spawner =
+            room.GetComponent<RoomPuzzleSpawner>();
 
         if (spawner == null)
             return;
 
-        RoomPuzzleState puzzleState = room.GetComponent<RoomPuzzleState>();
+        RoomPuzzleState puzzleState =
+            room.GetComponent<RoomPuzzleState>();
 
         spawner.SpawnPuzzle(puzzlePrefabs, puzzleState);
     }
@@ -341,10 +400,13 @@ public class InfiniteRoomGenerator : MonoBehaviour
         {
             case RoomDirection.North:
                 return Vector2Int.up;
+
             case RoomDirection.South:
                 return Vector2Int.down;
+
             case RoomDirection.East:
                 return Vector2Int.right;
+
             case RoomDirection.West:
                 return Vector2Int.left;
         }
@@ -358,10 +420,13 @@ public class InfiniteRoomGenerator : MonoBehaviour
         {
             case RoomDirection.North:
                 return RoomDirection.South;
+
             case RoomDirection.South:
                 return RoomDirection.North;
+
             case RoomDirection.East:
                 return RoomDirection.West;
+
             case RoomDirection.West:
                 return RoomDirection.East;
         }
