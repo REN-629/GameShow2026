@@ -1,28 +1,10 @@
-// RoomWallSwitcher.cs
-//
-// 通常壁と出口パターンを切り替えるスクリプト。
-//
-// 修正版:
-// ・Wall_NorthなどをInspectorで入れ忘れても名前から自動検索する
-// ・出口がある方向は通常壁をOFF
-// ・出口がない方向は通常壁をON
-//
-// 部屋PrefabのRootに付ける。
-//
-// 推奨構成:
-// Room_A
-// ├ RoomWallSwitcher
-// ├ Wall_North
-// ├ Wall_South
-// ├ Wall_East
-// ├ Wall_West
-// ├ ExitGroup_North
-// ├ ExitGroup_South
-// ├ ExitGroup_East
-// └ ExitGroup_West
-
 using UnityEngine;
 
+// RoomWallSwitcher
+//
+// 通常壁と出口パターンを切り替える。
+// Southは入口専用なので、Wall_Southも基本OFFにできる。
+// 入口穴をPrefab側で用意する場合、Wall_Southは登録しなくてOK。
 public class RoomWallSwitcher : MonoBehaviour
 {
     [Header("通常壁")]
@@ -30,6 +12,10 @@ public class RoomWallSwitcher : MonoBehaviour
     public GameObject wallSouth;
     public GameObject wallEast;
     public GameObject wallWest;
+
+    [Header("South入口壁")]
+    [Tooltip("ONならSouth側の通常壁を常にOFFにする")]
+    public bool alwaysHideSouthWall = true;
 
     [Header("自動検索")]
     public bool autoFindWallsByName = true;
@@ -58,9 +44,13 @@ public class RoomWallSwitcher : MonoBehaviour
             AutoFindWalls();
 
         ApplyDirection(room, RoomDirection.North, wallNorth);
-        ApplyDirection(room, RoomDirection.South, wallSouth);
         ApplyDirection(room, RoomDirection.East, wallEast);
         ApplyDirection(room, RoomDirection.West, wallWest);
+
+        if (wallSouth != null)
+        {
+            wallSouth.SetActive(!alwaysHideSouthWall);
+        }
     }
 
     void ApplyDirection(RoomCell room, RoomDirection direction, GameObject wall)
@@ -74,11 +64,7 @@ public class RoomWallSwitcher : MonoBehaviour
             group.selectedPattern.gameObject.activeSelf;
 
         if (wall != null)
-        {
-            // 出口がある → 普通壁OFF
-            // 出口がない → 普通壁ON
             wall.SetActive(!hasActiveExit);
-        }
 
         if (debugLog)
         {
@@ -90,8 +76,6 @@ public class RoomWallSwitcher : MonoBehaviour
                 + hasActiveExit
                 + " / wall="
                 + (wall != null ? wall.name : "未設定")
-                + " / wallActive="
-                + (wall != null ? wall.activeSelf.ToString() : "none")
             );
         }
     }

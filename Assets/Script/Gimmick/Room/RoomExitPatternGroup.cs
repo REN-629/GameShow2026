@@ -1,5 +1,10 @@
 using UnityEngine;
 
+// RoomExitPatternGroup
+//
+// 方向ごとの出口グループ。
+// この版では South は完全に入口専用。
+// Southは出口抽選・壁抽選・ドア生成から除外する。
 public class RoomExitPatternGroup : MonoBehaviour
 {
     [Header("方向")]
@@ -11,6 +16,9 @@ public class RoomExitPatternGroup : MonoBehaviour
     [Header("出口になる確率")]
     [Range(0f, 1f)]
     public float exitChance = 0.5f;
+
+    [Header("入口専用")]
+    public bool entranceOnly = false;
 
     [Header("出口パターン")]
     public RoomExitPattern[] patterns;
@@ -71,14 +79,19 @@ public class RoomExitPatternGroup : MonoBehaviour
             Debug.Log(name + " selected " + selectedPattern.name + " / dir=" + direction);
     }
 
-    public void HideSelectedPattern()
+    public void ForceDisable()
     {
-        if (selectedPattern != null)
-            selectedPattern.gameObject.SetActive(false);
+        entranceOnly = true;
+        enableExit = false;
+        selectedPattern = null;
+        SetAllPatternsActive(false);
     }
 
     void SetAllPatternsActive(bool active)
     {
+        if (patterns == null || patterns.Length == 0)
+            patterns = GetComponentsInChildren<RoomExitPattern>(true);
+
         if (patterns == null)
             return;
 
@@ -91,6 +104,9 @@ public class RoomExitPatternGroup : MonoBehaviour
 
     public RoomDoorSpawnPoint GetSelectedDoorSpawnPoint()
     {
+        if (entranceOnly)
+            return null;
+
         if (!enableExit)
             return null;
 
@@ -102,6 +118,9 @@ public class RoomExitPatternGroup : MonoBehaviour
 
     public DoorController GetSpawnedDoor()
     {
+        if (entranceOnly)
+            return null;
+
         if (!enableExit)
             return null;
 

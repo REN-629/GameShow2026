@@ -1,5 +1,9 @@
 using UnityEngine;
 
+// RoomDoorSpawnPoint
+//
+// 扉を生成する位置。
+// spawnDoorがONでも、blockedByConnectionがONなら生成しない。
 public class RoomDoorSpawnPoint : MonoBehaviour
 {
     [Header("このスポーンポイントで扉を生成する")]
