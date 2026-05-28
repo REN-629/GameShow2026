@@ -4702,6 +4702,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roomPrefabs:
   - {fileID: 3899988545844213169, guid: 2b129901cecd1e34aad9b7c8698ee2c9, type: 3}
+  - {fileID: 3899988545844213169, guid: 63449f724ffdd2a4fa02b1a202a65316, type: 3}
   doorPrefabs:
   - {fileID: 8512036536275225885, guid: 67f3488e8bef1ff4f8632e4e3dbdd71b, type: 3}
   - {fileID: 5196458409043475981, guid: ba69c7f259c1dc24a9722592f55ea4f4, type: 3}
@@ -4713,6 +4714,11 @@ MonoBehaviour:
   startRoom: {fileID: 7847606658536023965}
   exitChance: 0.5
   guaranteeAtLeastOneExit: 1
+  northSouthInverted: 1
+  eastWestInverted: 1
+  deleteFarRooms: 1
+  deleteDistance: 5
+  overwriteExistingRoomOnGenerate: 1
   debugLog: 1
 --- !u!4 &1515741196
 Transform:

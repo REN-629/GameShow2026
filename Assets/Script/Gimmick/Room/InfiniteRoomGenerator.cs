@@ -1,19 +1,6 @@
+//部屋が無限に続くようにみせる
 using System.Collections.Generic;
 using UnityEngine;
-
-// InfiniteRoomGenerator
-//
-// 超単純化版:
-// ・Southは入口専用として完全除外
-// ・出口抽選はNorth/East/Westだけ
-// ・最低1つ出口をNorth/East/Westから作る
-// ・部屋生成もNorth/East/Westの出口がある方向だけ
-// ・新部屋はSouthが接続元を向くように回転生成
-// ・Southにはドアを生成しない
-//
-// 注意:
-// 部屋Prefab側ではSouthに入口穴/入口通路を固定で作る。
-// South側をランダム壁やランダム扉として扱わない。
 public class InfiniteRoomGenerator : MonoBehaviour
 {
     [Header("生成する部屋Prefab")]
@@ -40,6 +27,24 @@ public class InfiniteRoomGenerator : MonoBehaviour
     public float exitChance = 0.5f;
 
     public bool guaranteeAtLeastOneExit = true;
+
+    [Header("座標反転設定")]
+    [Tooltip("ONなら North を -Z 側、South を +Z 側として扱う")]
+    public bool northSouthInverted = true;
+
+    [Tooltip("ONなら East と West を反転する")]
+    public bool eastWestInverted = true;
+
+    [Header("古い部屋削除")]
+    [Tooltip("ONなら、現在部屋から一定距離以上離れた部屋を削除する")]
+    public bool deleteFarRooms = true;
+
+    [Tooltip("現在部屋からこの距離より遠い部屋を削除する。5ならマンハッタン距離5以上を削除")]
+    public int deleteDistance = 5;
+
+    [Header("既存部屋上書き")]
+    [Tooltip("ONなら、新しく部屋を生成する位置に既存部屋があった場合、それを削除して新規生成する")]
+    public bool overwriteExistingRoomOnGenerate = true;
 
     [Header("デバッグ")]
     public bool debugLog = true;
@@ -79,6 +84,10 @@ public class InfiniteRoomGenerator : MonoBehaviour
         if (centerRoom == null)
             return;
 
+        // 現在部屋を基準に古い部屋削除
+        if (deleteFarRooms)
+            DeleteRoomsFarFrom(centerRoom.gridPosition);
+
         // Southは入口専用なので生成方向から除外
         TryGenerateFromLocalExit(centerRoom, RoomDirection.North);
         TryGenerateFromLocalExit(centerRoom, RoomDirection.East);
@@ -102,25 +111,28 @@ public class InfiniteRoomGenerator : MonoBehaviour
         Vector2Int targetGrid =
             fromRoom.gridPosition + DirectionToGridOffset(worldDirection);
 
+        // 既存部屋がある場合
         if (generatedRooms.ContainsKey(targetGrid))
         {
-            EnsureExitVisible(fromRoom, localExitDirection);
-            RefreshRoomDoors(fromRoom);
-            ApplyWallSwitcher(fromRoom);
-
-            if (debugLog)
+            if (!overwriteExistingRoomOnGenerate)
             {
-                Debug.Log(
-                    "既存部屋あり: "
-                    + targetGrid
-                    + " / localExit="
-                    + localExitDirection
-                    + " / worldDir="
-                    + worldDirection
-                );
+                EnsureExitVisible(fromRoom, localExitDirection);
+                RefreshRoomDoors(fromRoom);
+                ApplyWallSwitcher(fromRoom);
+
+                if (debugLog)
+                {
+                    Debug.Log(
+                        "既存部屋あり: "
+                        + targetGrid
+                        + " / 上書きなし"
+                    );
+                }
+
+                return;
             }
 
-            return;
+            DeleteRoomAt(targetGrid);
         }
 
         GameObject prefab = PickRandomRoomPrefab();
@@ -367,6 +379,50 @@ public class InfiniteRoomGenerator : MonoBehaviour
         SpawnDoorsForRoom(room);
     }
 
+    void DeleteRoomsFarFrom(Vector2Int centerGrid)
+    {
+        List<Vector2Int> deleteKeys =
+            new List<Vector2Int>();
+
+        foreach (KeyValuePair<Vector2Int, RoomCell> pair in generatedRooms)
+        {
+            Vector2Int grid = pair.Key;
+
+            if (grid == centerGrid)
+                continue;
+
+            int distance =
+                Mathf.Abs(grid.x - centerGrid.x)
+                + Mathf.Abs(grid.y - centerGrid.y);
+
+            if (distance >= deleteDistance)
+                deleteKeys.Add(grid);
+        }
+
+        foreach (Vector2Int key in deleteKeys)
+        {
+            DeleteRoomAt(key);
+        }
+    }
+
+    void DeleteRoomAt(Vector2Int grid)
+    {
+        if (!generatedRooms.ContainsKey(grid))
+            return;
+
+        RoomCell room = generatedRooms[grid];
+
+        generatedRooms.Remove(grid);
+
+        if (room != null)
+        {
+            if (debugLog)
+                Debug.Log("部屋削除: " + grid + " / " + room.name);
+
+            Destroy(room.gameObject);
+        }
+    }
+
     GameObject PickRandomRoomPrefab()
     {
         if (roomPrefabs == null || roomPrefabs.Length <= 0)
@@ -425,17 +481,10 @@ public class InfiniteRoomGenerator : MonoBehaviour
         worldVector.y = 0f;
         worldVector.Normalize();
 
-        float dotNorth =
-            Vector3.Dot(worldVector, Vector3.forward);
-
-        float dotSouth =
-            Vector3.Dot(worldVector, Vector3.back);
-
-        float dotEast =
-            Vector3.Dot(worldVector, Vector3.right);
-
-        float dotWest =
-            Vector3.Dot(worldVector, Vector3.left);
+        float dotNorth = Vector3.Dot(worldVector, Vector3.forward);
+        float dotSouth = Vector3.Dot(worldVector, Vector3.back);
+        float dotEast = Vector3.Dot(worldVector, Vector3.right);
+        float dotWest = Vector3.Dot(worldVector, Vector3.left);
 
         float max = dotNorth;
         RoomDirection result = RoomDirection.North;
@@ -471,10 +520,10 @@ public class InfiniteRoomGenerator : MonoBehaviour
                 return Quaternion.Euler(0f, 180f, 0f);
 
             case RoomDirection.East:
-                return Quaternion.Euler(0f, -90f, 0f);
+                return Quaternion.Euler(0f, 90f, 0f);
 
             case RoomDirection.West:
-                return Quaternion.Euler(0f, 90f, 0f);
+                return Quaternion.Euler(0f, -90f, 0f);
         }
 
         return Quaternion.identity;
@@ -494,16 +543,16 @@ public class InfiniteRoomGenerator : MonoBehaviour
         switch (direction)
         {
             case RoomDirection.North:
-                return Vector2Int.up;
+                return northSouthInverted ? Vector2Int.down : Vector2Int.up;
 
             case RoomDirection.South:
-                return Vector2Int.down;
+                return northSouthInverted ? Vector2Int.up : Vector2Int.down;
 
             case RoomDirection.East:
-                return Vector2Int.right;
+                return eastWestInverted ? Vector2Int.left : Vector2Int.right;
 
             case RoomDirection.West:
-                return Vector2Int.left;
+                return eastWestInverted ? Vector2Int.right : Vector2Int.left;
         }
 
         return Vector2Int.zero;
