@@ -13,13 +13,7 @@ public class RoomDoorSpawnPoint : MonoBehaviour
 
     public bool CanSpawnDoor()
     {
-        if (!spawnDoor)
-            return false;
-
-        if (blockedByConnection)
-            return false;
-
-        return true;
+        return spawnDoor && !blockedByConnection;
     }
 
     public void BlockDoorByConnection()

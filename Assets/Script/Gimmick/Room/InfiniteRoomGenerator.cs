@@ -1,24 +1,3 @@
-// InfiniteRoomGenerator.cs
-//
-// 接続先側の出口/ドア重複対策版
-//
-// 修正内容:
-// ・今いる部屋から新しい部屋を生成した時、
-//   新しい部屋の「来た方向」は接続済み扱いにする
-//
-// 例:
-// 今いる部屋から北へ新部屋生成
-//
-// 今いる部屋 North:
-//   出口表示あり
-//   ドア生成あり
-//
-// 新しい部屋 South:
-//   接続済みなので出口パターン非表示
-//   ドア生成なし
-//
-// これで、接続部分にドアや出口壁が二重に出る問題を防ぐ。
-
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -43,17 +22,16 @@ public class InfiniteRoomGenerator : MonoBehaviour
     [Header("最初の部屋")]
     public RoomCell startRoom;
 
-    [Header("生成設定")]
-    public bool forceGenerateAllDirections = true;
+    [Header("出口設定")]
+    [Range(0f, 1f)]
+    public float exitChance = 0.5f;
+
+    public bool guaranteeAtLeastOneExit = true;
 
     [Header("接続ドア設定")]
     public bool preventDoubleDoors = true;
-
-    [Tooltip("ONなら、新しく生成された部屋の来た方向にはドアを生成しない")]
-    public bool blockDoorOnCameFromSide = true;
-
-    [Tooltip("ONなら、新しく生成された部屋の来た方向の出口見た目も非表示にする")]
-    public bool hideCameFromExitPattern = true;
+    public bool blockDoorOnConnectedSide = true;
+    public bool hideConnectedSideExitPattern = true;
 
     [Header("デバッグ")]
     public bool debugLog = true;
@@ -69,6 +47,7 @@ public class InfiniteRoomGenerator : MonoBehaviour
             startRoom.generator = this;
 
             RegisterRoom(startRoom);
+
             SetupRoom(startRoom, null);
             GenerateAround(startRoom);
         }
@@ -104,22 +83,27 @@ public class InfiniteRoomGenerator : MonoBehaviour
 
     void TryGenerateDirection(RoomCell fromRoom, RoomDirection direction)
     {
+        RoomExitPatternGroup fromGroup = fromRoom.GetExitGroup(direction);
+
+        if (fromGroup == null || !fromGroup.enableExit)
+            return;
+
         Vector2Int targetGrid =
             fromRoom.gridPosition + DirectionToGridOffset(direction);
 
         if (generatedRooms.ContainsKey(targetGrid))
         {
+            RoomCell existingRoom = generatedRooms[targetGrid];
+
+            ConnectRooms(fromRoom, existingRoom, direction);
+
             RefreshRoomDoors(fromRoom);
+            RefreshRoomDoors(existingRoom);
+
             ApplyWallSwitcher(fromRoom);
+            ApplyWallSwitcher(existingRoom);
+
             return;
-        }
-
-        if (!forceGenerateAllDirections)
-        {
-            RoomExitPatternGroup fromGroup = fromRoom.GetExitGroup(direction);
-
-            if (fromGroup == null || !fromGroup.enableExit)
-                return;
         }
 
         GameObject prefab = PickRandomRoomPrefab();
@@ -146,128 +130,166 @@ public class InfiniteRoomGenerator : MonoBehaviour
 
         RegisterRoom(newRoom);
 
-        // 新部屋から見ると、来た方向は反対方向
-        RoomDirection cameFrom = GetOpposite(direction);
+        RoomDirection newRoomConnectedSide = GetOpposite(direction);
 
-        // 新部屋側は cameFrom を接続済みとしてセットアップ
-        SetupRoom(newRoom, cameFrom);
+        SetupRoom(newRoom, newRoomConnectedSide);
 
-        // 元部屋側は通常通りドア/壁状態を更新
+        EnsureExitVisible(fromRoom, direction);
+
         RefreshRoomDoors(fromRoom);
         ApplyWallSwitcher(fromRoom);
 
         if (debugLog)
         {
             Debug.Log(
-                "部屋生成: " + targetGrid
-                + " / from=" + fromRoom.gridPosition
-                + " / dir=" + direction
-                + " / prefab=" + prefab.name
+                "部屋生成: "
+                + targetGrid
+                + " / from="
+                + fromRoom.gridPosition
+                + " / dir="
+                + direction
+                + " / newRoomConnectedSide="
+                + newRoomConnectedSide
             );
         }
     }
 
-    void SetupRoom(RoomCell room, RoomDirection? cameFromDirection)
+    void SetupRoom(RoomCell room, RoomDirection? connectedSide)
     {
-        SetupRoomExitPatterns(room, cameFromDirection);
-        BlockCameFromDoorIfNeeded(room, cameFromDirection);
-        HideCameFromExitPatternIfNeeded(room, cameFromDirection);
+        DecideExits(room, connectedSide);
+
+        if (connectedSide.HasValue)
+            BlockConnectionSide(room, connectedSide.Value);
 
         SpawnDoorsForRoom(room);
         ApplyWallSwitcher(room);
         SpawnPuzzleForRoom(room);
     }
 
-    void SetupRoomExitPatterns(RoomCell room, RoomDirection? cameFromDirection)
+    void DecideExits(RoomCell room, RoomDirection? connectedSide)
     {
         if (room == null || room.exitGroups == null)
             return;
+
+        List<RoomExitPatternGroup> candidateGroups =
+            new List<RoomExitPatternGroup>();
 
         foreach (RoomExitPatternGroup group in room.exitGroups)
         {
             if (group == null)
                 continue;
 
-            // 来た方向は接続する必要があるので、一旦出口として選ぶ
-            // その後、HideCameFromExitPatternIfNeeded()で見た目だけ消す
-            if (cameFromDirection.HasValue && group.direction == cameFromDirection.Value)
+            group.exitChance = exitChance;
+
+            if (connectedSide.HasValue && group.direction == connectedSide.Value)
             {
-                group.forceExit = true;
-                group.enableExit = true;
-                group.SelectRandomPattern();
+                group.SetExitActive(true);
                 continue;
             }
 
-            // それ以外はRoomExitPatternGroup側の設定で、
-            // 通常壁 or 出口をランダム決定
-            group.SelectRandomPattern();
+            candidateGroups.Add(group);
+
+            bool makeExit = Random.value <= exitChance;
+            group.SetExitActive(makeExit);
         }
-    }
 
-    void BlockCameFromDoorIfNeeded(RoomCell room, RoomDirection? cameFromDirection)
-    {
-        if (!preventDoubleDoors)
+        if (!guaranteeAtLeastOneExit)
             return;
 
-        if (!blockDoorOnCameFromSide)
-            return;
+        bool hasOtherExit = false;
 
-        if (!cameFromDirection.HasValue)
-            return;
-
-        RoomExitPatternGroup group =
-            room.GetExitGroup(cameFromDirection.Value);
-
-        if (group == null)
-            return;
-
-        RoomDoorSpawnPoint spawnPoint =
-            group.GetSelectedDoorSpawnPoint();
-
-        if (spawnPoint == null)
-            return;
-
-        spawnPoint.BlockDoorByConnection();
-
-        if (debugLog)
+        foreach (RoomExitPatternGroup group in candidateGroups)
         {
-            Debug.Log(
-                room.name
-                + " / "
-                + cameFromDirection.Value
-                + " は接続済みなのでドア生成をブロック"
-            );
+            if (group != null && group.enableExit)
+            {
+                hasOtherExit = true;
+                break;
+            }
         }
-    }
 
-    void HideCameFromExitPatternIfNeeded(RoomCell room, RoomDirection? cameFromDirection)
-    {
-        if (!hideCameFromExitPattern)
-            return;
-
-        if (!cameFromDirection.HasValue)
-            return;
-
-        RoomExitPatternGroup group =
-            room.GetExitGroup(cameFromDirection.Value);
-
-        if (group == null)
-            return;
-
-        if (group.selectedPattern != null)
+        if (!hasOtherExit && candidateGroups.Count > 0)
         {
-            group.selectedPattern.gameObject.SetActive(false);
+            RoomExitPatternGroup forced =
+                candidateGroups[Random.Range(0, candidateGroups.Count)];
+
+            forced.SetExitActive(true);
 
             if (debugLog)
             {
                 Debug.Log(
                     room.name
-                    + " / "
-                    + cameFromDirection.Value
-                    + " は接続済みなので出口パターンを非表示"
+                    + " は出口が無かったので最低1つ出口を追加: "
+                    + forced.direction
                 );
             }
         }
+    }
+
+    void ConnectRooms(RoomCell fromRoom, RoomCell targetRoom, RoomDirection directionFromRoom)
+    {
+        if (fromRoom == null || targetRoom == null)
+            return;
+
+        RoomDirection targetConnectedSide = GetOpposite(directionFromRoom);
+
+        EnsureExitVisible(fromRoom, directionFromRoom);
+        EnsureExitVisible(targetRoom, targetConnectedSide);
+
+        BlockConnectionSide(targetRoom, targetConnectedSide);
+
+        if (debugLog)
+        {
+            Debug.Log(
+                "既存部屋接続: "
+                + fromRoom.gridPosition
+                + " "
+                + directionFromRoom
+                + " -> "
+                + targetRoom.gridPosition
+                + " / targetSide="
+                + targetConnectedSide
+            );
+        }
+    }
+
+    void EnsureExitVisible(RoomCell room, RoomDirection direction)
+    {
+        RoomExitPatternGroup group = room.GetExitGroup(direction);
+
+        if (group == null)
+            return;
+
+        if (!group.enableExit || group.selectedPattern == null)
+            group.SetExitActive(true);
+
+        if (group.selectedPattern != null)
+            group.selectedPattern.gameObject.SetActive(true);
+    }
+
+    void BlockConnectionSide(RoomCell room, RoomDirection direction)
+    {
+        if (!preventDoubleDoors)
+            return;
+
+        RoomExitPatternGroup group = room.GetExitGroup(direction);
+
+        if (group == null)
+            return;
+
+        if (!group.enableExit || group.selectedPattern == null)
+            group.SetExitActive(true);
+
+        RoomDoorSpawnPoint spawnPoint =
+            group.GetSelectedDoorSpawnPoint();
+
+        if (spawnPoint != null && blockDoorOnConnectedSide)
+            spawnPoint.BlockDoorByConnection();
+
+        if (hideConnectedSideExitPattern && group.selectedPattern != null)
+            group.selectedPattern.gameObject.SetActive(false);
+
+        if (debugLog)
+            Debug.Log(room.name + " / " + direction + " は接続済み側として処理");
     }
 
     public void SpawnDoorsForRoom(RoomCell room)
@@ -275,14 +297,12 @@ public class InfiniteRoomGenerator : MonoBehaviour
         if (room == null || room.exitGroups == null)
             return;
 
-        List<DoorController> roomDoors = new List<DoorController>();
+        List<DoorController> roomDoors =
+            new List<DoorController>();
 
         foreach (RoomExitPatternGroup group in room.exitGroups)
         {
-            if (group == null)
-                continue;
-
-            if (!group.enableExit)
+            if (group == null || !group.enableExit)
                 continue;
 
             RoomDoorSpawnPoint spawnPoint =
@@ -400,13 +420,10 @@ public class InfiniteRoomGenerator : MonoBehaviour
         {
             case RoomDirection.North:
                 return Vector2Int.up;
-
             case RoomDirection.South:
                 return Vector2Int.down;
-
             case RoomDirection.East:
                 return Vector2Int.right;
-
             case RoomDirection.West:
                 return Vector2Int.left;
         }
@@ -420,13 +437,10 @@ public class InfiniteRoomGenerator : MonoBehaviour
         {
             case RoomDirection.North:
                 return RoomDirection.South;
-
             case RoomDirection.South:
                 return RoomDirection.North;
-
             case RoomDirection.East:
                 return RoomDirection.West;
-
             case RoomDirection.West:
                 return RoomDirection.East;
         }

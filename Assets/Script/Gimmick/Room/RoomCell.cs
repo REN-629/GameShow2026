@@ -1,10 +1,26 @@
-//部屋1つ分の管理
+// RoomCell.cs
+//
+// 部屋1つ分の管理。
+//
+// 修正版:
+// ・プレイヤーが一度侵入した部屋では、再侵入しても部屋生成しない
+// ・ただし CurrentRoom の更新は毎回行う
+//
+// つまり:
+// 初回侵入
+//   → CurrentRoom更新
+//   → 周囲生成
+//
+// 再侵入
+//   → CurrentRoom更新のみ
+//   → GenerateAround() は呼ばない
+//
+// これで、過去に入った部屋のTriggerに触れても再生成されない。
 
 using System.Collections.Generic;
 using UnityEngine;
 
-//一旦無しで試す
-//[RequireComponent(typeof(Collider))]
+[RequireComponent(typeof(Collider))]
 public class RoomCell : MonoBehaviour
 {
     [Header("この部屋のグリッド座標")]
@@ -17,12 +33,18 @@ public class RoomCell : MonoBehaviour
     public RoomExitPatternGroup[] exitGroups;
 
     [Header("設定")]
+    [Tooltip("ONなら、この部屋で周囲生成するのは初回侵入時だけ")]
     public bool generateOnlyOnce = true;
+
+    [Header("状態")]
+    [Tooltip("プレイヤーがこの部屋に一度でも入ったか")]
+    public bool hasPlayerEntered = false;
+
+    [Tooltip("この部屋を中心に周囲生成を行ったか")]
+    public bool hasGeneratedAround = false;
 
     [Header("デバッグ")]
     public bool debugLog = true;
-
-    private bool hasGenerated = false;
 
     void Reset()
     {
@@ -48,13 +70,39 @@ public class RoomCell : MonoBehaviour
         if (!other.CompareTag("Player"))
             return;
 
-        RoomPuzzleState puzzleState = GetComponent<RoomPuzzleState>();
+        // CurrentRoomは再侵入時も更新する
+        UpdateCurrentRoom();
 
-        if (puzzleState != null && RoomRuntimeManager.Instance != null)
-            RoomRuntimeManager.Instance.SetCurrentRoom(puzzleState);
+        // 既に入ったことがある部屋なら、再生成しない
+        if (hasPlayerEntered && generateOnlyOnce)
+        {
+            if (debugLog)
+            {
+                Debug.Log(
+                    name
+                    + " は侵入済みなので再生成なし: "
+                    + gridPosition
+                );
+            }
 
-        if (generateOnlyOnce && hasGenerated)
             return;
+        }
+
+        hasPlayerEntered = true;
+
+        if (generateOnlyOnce && hasGeneratedAround)
+        {
+            if (debugLog)
+            {
+                Debug.Log(
+                    name
+                    + " は既に周囲生成済み: "
+                    + gridPosition
+                );
+            }
+
+            return;
+        }
 
         if (generator == null)
         {
@@ -62,12 +110,22 @@ public class RoomCell : MonoBehaviour
             return;
         }
 
-        hasGenerated = true;
+        hasGeneratedAround = true;
 
         if (debugLog)
-            Debug.Log("プレイヤー侵入: " + gridPosition);
+            Debug.Log("プレイヤー初侵入: " + gridPosition);
 
         generator.GenerateAround(this);
+    }
+
+    void UpdateCurrentRoom()
+    {
+        RoomPuzzleState puzzleState = GetComponent<RoomPuzzleState>();
+
+        if (puzzleState != null && RoomRuntimeManager.Instance != null)
+        {
+            RoomRuntimeManager.Instance.SetCurrentRoom(puzzleState);
+        }
     }
 
     public RoomExitPatternGroup GetExitGroup(RoomDirection direction)
