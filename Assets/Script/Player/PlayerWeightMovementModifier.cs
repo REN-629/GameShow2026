@@ -1,12 +1,4 @@
-// PlayerWeightMovementModifier：Inventoryの合計重量でプレイヤーの移動速度を下げる
-//
-// 付ける場所：Player本体
-//
-// 必要な参照：
-// Player Controller → SC_CharacterController
-// Inventory → ItemManagerのInventory
-//
-// 例：
+//Inventoryの合計重量でプレイヤーの移動速度を下げる
 // 重量0   → speed 100%
 // 重量50  → speed 50%
 // 重量100 → speed 0%

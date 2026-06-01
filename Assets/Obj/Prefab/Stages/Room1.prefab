@@ -528,6 +528,7 @@ GameObject:
   - component: {fileID: 4988369408001004002}
   - component: {fileID: 2017390572439294659}
   - component: {fileID: 8045052359005393961}
+  - component: {fileID: 7743053629656372466}
   - component: {fileID: 2000295751651082898}
   m_Layer: 0
   m_Name: Room1
@@ -616,6 +617,8 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   puzzleCleared: 0
+  scoreCounted: 0
+  clearMethod: 0
   debugLog: 1
 --- !u!114 &8045052359005393961
 MonoBehaviour:
@@ -633,6 +636,20 @@ MonoBehaviour:
   - {fileID: 5756285336784694753}
   puzzleCount: 1
   debugLog: 1
+--- !u!114 &7743053629656372466
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3899988545844213169}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed032841c9cc36c42972970f951c76b4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  roomId: 
+  useGridPositionAsId: 1
 --- !u!65 &2000295751651082898
 BoxCollider:
   m_ObjectHideFlags: 0

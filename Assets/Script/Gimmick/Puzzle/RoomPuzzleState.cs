@@ -1,15 +1,3 @@
-// RoomPuzzleState.cs
-//
-// 部屋のパズル状態と、その部屋の扉を管理するスクリプト
-//
-// 修正版:
-// ・ClearPuzzle() でクリア状態ON、扉を開く
-// ・ResetPuzzle() でクリア状態OFF、扉を閉じる
-// ・SetPuzzleState(bool) でON/OFFをまとめて制御できる
-//
-// 重量ボタンのような
-// 「重りが乗っている間だけ開く」仕組みに対応。
-
 using UnityEngine;
 
 public class RoomPuzzleState : MonoBehaviour
@@ -20,25 +8,54 @@ public class RoomPuzzleState : MonoBehaviour
     [Header("状態")]
     public bool puzzleCleared = false;
 
+    [Header("スコア")]
+    public bool scoreCounted = false;
+
+    [Header("クリア方法")]
+    public RoomClearMethod clearMethod = RoomClearMethod.Unknown;
+
     [Header("デバッグ")]
     public bool debugLog = true;
 
+    void Start()
+    {
+        RoomIdentity identity = GetComponent<RoomIdentity>();
+
+        if (identity != null && RunScoreManager.Instance != null)
+        {
+            scoreCounted = RunScoreManager.Instance.IsRoomCleared(identity.roomId);
+        }
+    }
+
     public void ClearPuzzle()
     {
-        SetPuzzleState(true);
+        SetPuzzleState(true, RoomClearMethod.NormalPuzzle);
+    }
+
+    public void ClearPuzzle(RoomClearMethod method)
+    {
+        SetPuzzleState(true, method);
     }
 
     public void ResetPuzzle()
     {
-        SetPuzzleState(false);
+        SetPuzzleState(false, clearMethod);
     }
 
     public void SetPuzzleState(bool cleared)
+    {
+        SetPuzzleState(cleared, RoomClearMethod.Unknown);
+    }
+
+    public void SetPuzzleState(bool cleared, RoomClearMethod method)
     {
         if (puzzleCleared == cleared)
             return;
 
         puzzleCleared = cleared;
+
+        if (cleared && method != RoomClearMethod.Unknown)
+            clearMethod = method;
 
         if (debugLog)
         {
@@ -46,13 +63,37 @@ public class RoomPuzzleState : MonoBehaviour
                 name
                 + " のパズル状態: "
                 + (puzzleCleared ? "クリア" : "未クリア")
+                + " / method="
+                + clearMethod
             );
         }
 
         if (puzzleCleared)
+        {
+            CountScoreOnce();
             OpenDoors();
+        }
         else
+        {
             CloseDoors();
+        }
+    }
+
+    void CountScoreOnce()
+    {
+        if (scoreCounted)
+            return;
+
+        scoreCounted = true;
+
+        if (RunScoreManager.Instance != null)
+        {
+            RunScoreManager.Instance.RegisterRoomCleared(this, clearMethod);
+        }
+        else
+        {
+            Debug.LogWarning("RunScoreManager がありません");
+        }
     }
 
     public void OpenDoors()

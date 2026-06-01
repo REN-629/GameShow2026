@@ -1,18 +1,12 @@
-// RoomPuzzleTarget.cs
-//
-// パズルPrefabが「どの部屋をクリア/解除するか」を持つための補助スクリプト
-//
-// InfiniteRoomGenerator / RoomPuzzleSpawner によって
-// 生成時に targetRoom が自動設定される想定。
-//
-// targetRoomが無い場合は RoomRuntimeManager.CurrentRoom を使う。
-
 using UnityEngine;
 
 public class RoomPuzzleTarget : MonoBehaviour
 {
     [Header("このパズルが操作する部屋")]
     public RoomPuzzleState targetRoom;
+
+    [Header("このパズルのクリア方法")]
+    public RoomClearMethod clearMethod = RoomClearMethod.NormalPuzzle;
 
     public void SetCleared(bool cleared)
     {
@@ -24,7 +18,10 @@ public class RoomPuzzleTarget : MonoBehaviour
             return;
         }
 
-        room.SetPuzzleState(cleared);
+        if (cleared)
+            room.SetPuzzleState(true, clearMethod);
+        else
+            room.SetPuzzleState(false, clearMethod);
     }
 
     public void ClearTargetRoom()

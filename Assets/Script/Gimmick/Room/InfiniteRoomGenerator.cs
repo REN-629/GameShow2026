@@ -54,15 +54,25 @@ public class InfiniteRoomGenerator : MonoBehaviour
 
     void Start()
     {
+        //部屋のIDを設定と生成
         if (startRoom != null)
         {
             startRoom.gridPosition = Vector2Int.zero;
             startRoom.generator = this;
 
+            RoomIdentity identity = startRoom.GetComponent<RoomIdentity>();
+            if (identity != null)
+            {
+                identity.SetupId(startRoom.gridPosition);
+            }
+
             RegisterRoom(startRoom);
             SetupRoom(startRoom);
             GenerateAround(startRoom);
+
+
         }
+
     }
 
     public void RegisterRoom(RoomCell room)
@@ -84,11 +94,11 @@ public class InfiniteRoomGenerator : MonoBehaviour
         if (centerRoom == null)
             return;
 
-        // 現在部屋を基準に古い部屋削除
+        //現在部屋を基準に古い部屋削除
         if (deleteFarRooms)
             DeleteRoomsFarFrom(centerRoom.gridPosition);
 
-        // Southは入口専用なので生成方向から除外
+        //Southは入口専用なので生成方向から除外
         TryGenerateFromLocalExit(centerRoom, RoomDirection.North);
         TryGenerateFromLocalExit(centerRoom, RoomDirection.East);
         TryGenerateFromLocalExit(centerRoom, RoomDirection.West);
@@ -111,7 +121,7 @@ public class InfiniteRoomGenerator : MonoBehaviour
         Vector2Int targetGrid =
             fromRoom.gridPosition + DirectionToGridOffset(worldDirection);
 
-        // 既存部屋がある場合
+        //既存部屋がある場合
         if (generatedRooms.ContainsKey(targetGrid))
         {
             if (!overwriteExistingRoomOnGenerate)
@@ -157,9 +167,19 @@ public class InfiniteRoomGenerator : MonoBehaviour
         newRoom.gridPosition = targetGrid;
         newRoom.generator = this;
 
+        //RoomIdentity設定
+        RoomIdentity identity = newRoom.GetComponent<RoomIdentity>();
+
+        if (identity != null)
+        {
+            identity.SetupId(targetGrid);
+        }
+
         if (newRoom.exitGroups == null || newRoom.exitGroups.Length == 0)
+        {
             newRoom.exitGroups =
                 newRoom.GetComponentsInChildren<RoomExitPatternGroup>(true);
+        }
 
         RegisterRoom(newRoom);
 
@@ -211,14 +231,14 @@ public class InfiniteRoomGenerator : MonoBehaviour
 
             group.exitChance = exitChance;
 
-            // Southは完全に入口専用なので抽選から排除
+            //南側は完全に入口専用なので抽選から排除
             if (group.direction == RoomDirection.South)
             {
                 group.ForceDisable();
                 continue;
             }
 
-            // North/East/Westだけ抽選
+            //南以外の方角だけ抽選
             candidateGroups.Add(group);
 
             bool makeExit = Random.value <= exitChance;
@@ -293,7 +313,7 @@ public class InfiniteRoomGenerator : MonoBehaviour
             if (group == null)
                 continue;
 
-            // Southはここでも除外
+            //南側はここでも除外
             if (group.direction == RoomDirection.South)
                 continue;
 
