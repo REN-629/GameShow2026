@@ -1,6 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+// RunActionLogger
+//
+// 行動ログと、部屋ごとのクリア方法を保存する。
+// スコア加算は次部屋Triggerに触れた時。
+// クリア方法は各部屋で別途記録する。
+
 public class RunActionLogger : MonoBehaviour
 {
     public static RunActionLogger Instance { get; private set; }
@@ -17,22 +23,26 @@ public class RunActionLogger : MonoBehaviour
     public int destroyedDoorCount = 0;
     public int destroyedWallCount = 0;
 
-    [Header("部屋")]
+    [Header("到達")]
+    public int reachedRoomEventCount = 0;
+
+    [Header("クリア方法")]
     public int normalPuzzleClearCount = 0;
     public int pressurePlateClearCount = 0;
     public int goalTriggerClearCount = 0;
     public int destroyedClearCount = 0;
+    public int bypassedPuzzleCount = 0;
     public int shortcutClearCount = 0;
 
     [Header("時間")]
     public float runStartTime;
     public float totalRunTime;
 
-    [Header("デバッグ")]
-    public bool debugLog = true;
-
     private readonly Dictionary<string, RoomClearMethod> roomClearMethods =
         new Dictionary<string, RoomClearMethod>();
+
+    private readonly HashSet<int> reachedLevels =
+        new HashSet<int>();
 
     private Vector3 lastPlayerPosition;
     private bool hasLastPosition = false;
@@ -88,7 +98,19 @@ public class RunActionLogger : MonoBehaviour
     public void LogDoorDestroyed() { destroyedDoorCount++; }
     public void LogWallDestroyed() { destroyedWallCount++; }
 
-    public void LogRoomCleared(string roomId, RoomClearMethod method)
+    public void LogRoomReached(int level, string roomId)
+    {
+        if (reachedLevels.Contains(level))
+            return;
+
+        reachedLevels.Add(level);
+        reachedRoomEventCount++;
+
+        // 前の部屋のクリア方法が未記録なら、パズル無視扱いにできる余地を残す。
+        Debug.Log("部屋到達記録: Level " + level + " / " + roomId);
+    }
+
+    public void SetRoomClearMethod(string roomId, RoomClearMethod method)
     {
         if (string.IsNullOrEmpty(roomId))
             return;
@@ -121,10 +143,21 @@ public class RunActionLogger : MonoBehaviour
             case RoomClearMethod.ItemShortcut:
                 shortcutClearCount++;
                 break;
+
+            case RoomClearMethod.BypassedPuzzle:
+                bypassedPuzzleCount++;
+                break;
         }
 
-        if (debugLog)
-            Debug.Log("部屋クリア方法記録: " + roomId + " / " + method);
+        Debug.Log("部屋クリア方法記録: " + roomId + " / " + method);
+    }
+
+    public RoomClearMethod GetRoomClearMethod(string roomId)
+    {
+        if (roomClearMethods.TryGetValue(roomId, out RoomClearMethod method))
+            return method;
+
+        return RoomClearMethod.Unknown;
     }
 
     public void ResetLog()
@@ -137,17 +170,21 @@ public class RunActionLogger : MonoBehaviour
         attackCount = 0;
         destroyedDoorCount = 0;
         destroyedWallCount = 0;
+        reachedRoomEventCount = 0;
 
         normalPuzzleClearCount = 0;
         pressurePlateClearCount = 0;
         goalTriggerClearCount = 0;
         destroyedClearCount = 0;
+        bypassedPuzzleCount = 0;
         shortcutClearCount = 0;
+
+        roomClearMethods.Clear();
+        reachedLevels.Clear();
 
         runStartTime = Time.time;
         totalRunTime = 0f;
 
-        roomClearMethods.Clear();
         hasLastPosition = false;
     }
 }

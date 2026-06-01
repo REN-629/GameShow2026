@@ -187,8 +187,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1.1449227, z: 1}
-  m_Center: {x: 0, y: 0.072461426, z: 0}
+  m_Size: {x: 0.9098139, y: 1.1449227, z: 0.9132814}
+  m_Center: {x: -0.00050965947, y: 0.072461426, z: 0.0001338323}
 --- !u!1 &6284508268181745307
 GameObject:
   m_ObjectHideFlags: 0
@@ -237,6 +237,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   targetRoom: {fileID: 0}
+  clearMethod: 2
 --- !u!65 &417664819215834137
 BoxCollider:
   m_ObjectHideFlags: 0

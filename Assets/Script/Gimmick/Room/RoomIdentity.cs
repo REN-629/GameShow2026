@@ -1,23 +1,36 @@
 using UnityEngine;
 
+// RoomIdentity
+//
+// 部屋のIDとレベルを持つ。
+// この版ではスコアは「部屋ID」ではなく「roomLevel」で加算する。
+//
+// 例:
+// Room1にいる時に次の部屋が2つ生成された場合
+// どちらも roomLevel = 2
+//
+// そのため、どちらに入ってもスコア+1は最初の1回だけ。
+
 public class RoomIdentity : MonoBehaviour
 {
     [Header("部屋ID")]
     public string roomId;
 
-    [Header("グリッド座標からIDを作る")]
-    public bool useGridPositionAsId = true;
+    [Header("部屋レベル")]
+    public int roomLevel = 1;
 
-    public void SetupId(Vector2Int gridPosition)
+    [Header("親レベル")]
+    public int parentRoomLevel = 0;
+
+    [Header("グリッド座標")]
+    public Vector2Int gridPosition;
+
+    public void SetupId(Vector2Int grid, int level, int parentLevel)
     {
-        if (useGridPositionAsId)
-        {
-            roomId = "Room_" + gridPosition.x + "_" + gridPosition.y;
-        }
+        gridPosition = grid;
+        roomLevel = level;
+        parentRoomLevel = parentLevel;
 
-        if (string.IsNullOrEmpty(roomId))
-        {
-            roomId = System.Guid.NewGuid().ToString();
-        }
+        roomId = "Level_" + roomLevel + "_Grid_" + grid.x + "_" + grid.y;
     }
 }

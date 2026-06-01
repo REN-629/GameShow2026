@@ -1,5 +1,12 @@
 using UnityEngine;
 
+// RoomPuzzleState
+//
+// この版ではスコア加算はしない。
+// スコアは次の部屋Triggerに触れた時にRunScoreManagerが加算する。
+//
+// ここでは「この部屋をどう攻略状態にしたか」だけを記録する。
+
 public class RoomPuzzleState : MonoBehaviour
 {
     [Header("この部屋の扉")]
@@ -8,24 +15,11 @@ public class RoomPuzzleState : MonoBehaviour
     [Header("状態")]
     public bool puzzleCleared = false;
 
-    [Header("スコア")]
-    public bool scoreCounted = false;
-
     [Header("クリア方法")]
     public RoomClearMethod clearMethod = RoomClearMethod.Unknown;
 
     [Header("デバッグ")]
     public bool debugLog = true;
-
-    void Start()
-    {
-        RoomIdentity identity = GetComponent<RoomIdentity>();
-
-        if (identity != null && RunScoreManager.Instance != null)
-        {
-            scoreCounted = RunScoreManager.Instance.IsRoomCleared(identity.roomId);
-        }
-    }
 
     public void ClearPuzzle()
     {
@@ -55,7 +49,10 @@ public class RoomPuzzleState : MonoBehaviour
         puzzleCleared = cleared;
 
         if (cleared && method != RoomClearMethod.Unknown)
+        {
             clearMethod = method;
+            RegisterClearMethodOnce(method);
+        }
 
         if (debugLog)
         {
@@ -70,7 +67,6 @@ public class RoomPuzzleState : MonoBehaviour
 
         if (puzzleCleared)
         {
-            CountScoreOnce();
             OpenDoors();
         }
         else
@@ -79,21 +75,29 @@ public class RoomPuzzleState : MonoBehaviour
         }
     }
 
-    void CountScoreOnce()
+    void RegisterClearMethodOnce(RoomClearMethod method)
     {
-        if (scoreCounted)
+        RoomIdentity identity = GetComponent<RoomIdentity>();
+
+        if (identity == null)
             return;
 
-        scoreCounted = true;
+        if (RunActionLogger.Instance != null)
+            RunActionLogger.Instance.SetRoomClearMethod(identity.roomId, method);
+    }
 
-        if (RunScoreManager.Instance != null)
-        {
-            RunScoreManager.Instance.RegisterRoomCleared(this, clearMethod);
-        }
-        else
-        {
-            Debug.LogWarning("RunScoreManager がありません");
-        }
+    public void RegisterBypassedIfNotCleared()
+    {
+        if (puzzleCleared)
+            return;
+
+        RoomIdentity identity = GetComponent<RoomIdentity>();
+
+        if (identity == null)
+            return;
+
+        if (RunActionLogger.Instance != null)
+            RunActionLogger.Instance.SetRoomClearMethod(identity.roomId, RoomClearMethod.BypassedPuzzle);
     }
 
     public void OpenDoors()

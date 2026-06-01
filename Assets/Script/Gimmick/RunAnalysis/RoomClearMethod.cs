@@ -7,5 +7,6 @@ public enum RoomClearMethod
     DoorDestroyed,
     WallDestroyed,
     ItemShortcut,
-    ForceBreak
+    ForceBreak,
+    BypassedPuzzle
 }

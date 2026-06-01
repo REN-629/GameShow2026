@@ -1,16 +1,20 @@
-//リザルトシーン用
-//シーンを跨いで残っているRunScoreManager と RunResultAnalyzerからUIに結果を渡す
 using UnityEngine;
 using UnityEngine.UI;
-//using TMPro;
-
+using TMPro;
 
 public class ResultSceneBinder : MonoBehaviour
 {
-    [Header("リザルト全文")]
+    [Header("リザルト全文 / TMP")]
+    public TextMeshProUGUI resultTMP;
+
+    [Header("個別表示 / TMP")]
+    public TextMeshProUGUI clearRoomTMP;
+    public TextMeshProUGUI bestRoomTMP;
+
+    [Header("リザルト全文 / Legacy Text")]
     public Text resultText;
 
-    [Header("個別表示")]
+    [Header("個別表示 / Legacy Text")]
     public Text clearRoomText;
     public Text bestRoomText;
 
@@ -23,19 +27,19 @@ public class ResultSceneBinder : MonoBehaviour
     {
         if (RunScoreManager.Instance != null)
         {
-            RunScoreManager.Instance.BindUI(clearRoomText, bestRoomText);
+            RunScoreManager.Instance.BindTMP(clearRoomTMP, bestRoomTMP);
+            RunScoreManager.Instance.BindLegacyText(clearRoomText, bestRoomText);
         }
 
+        string result = "何らかの不具合で測定不能";
+
+        if (RunResultAnalyzer.Instance != null)
+            result = RunResultAnalyzer.Instance.BuildResultText();
+
+        if (resultTMP != null)
+            resultTMP.text = result;
+
         if (resultText != null)
-        {
-            if (RunResultAnalyzer.Instance != null)
-            {
-                resultText.text = RunResultAnalyzer.Instance.BuildResultText();
-            }
-            else
-            {
-                resultText.text = "RunResultAnalyzer がありません";
-            }
-        }
+            resultText.text = result;
     }
 }
