@@ -1,0 +1,33 @@
+モデル
+Low Poly Shooter Pack - Free Sample
+　https://assetstore.unity.com/packages/templates/systems/low-poly-shooter-pack-free-sample-144839
+
+Pixel Capture : Photo mode built into a phone interface
+  https://assetstore.unity.com/packages/tools/camera/pixel-capture-photo-mode-built-into-a-phone-interface-290426
+
+Simple Modular Castle Assets
+　https://assetstore.unity.com/packages/3d/props/simple-modular-castle-assets-309297
+
+
+
+
+演出
+クロスヘア
+Crosshairs
+　https://assetstore.unity.com/packages/2d/gui/icons/crosshairs-216732
+
+壁破壊参考
+　https://github.com/ElasticSea/unity-fracture
+
+揺れ演出参考
+Smooth Shake Free
+　https://assetstore.unity.com/packages/tools/animation/smooth-shake-free-271263
+
+レトロ風シェーダー参考
+　https://github.com/AlexMerzlikin/Unity-VHS-Shader/tree/master
+
+
+
+フォント
+MaruMonica「マルモニカ」
+　https://booth.pm/ja/items/2958237?registration=1

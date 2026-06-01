@@ -1,0 +1,151 @@
+属性・材質・耐久 統合システム v3(1と2は没)
+
+考え方
+
+属性を2種類に分ける
+
+1. EffectAttribute 効果属性
+- Blunt	鈍器
+- Fire	火
+- Electric	電気
+- Explosion	爆発
+
+「何ができるか」を表す
+例: バールは Blunt、ライターは Fire
+
+2. MaterialAttribute 材質属性
+- Wood	木
+- Metal	金属
+- Stone	石
+
+「何でできているか」を表す
+例: バールは Metal、木の棒は Wood、木の壁は Wood。
+
+
+ダメ計
+
+→被ダメ側の AttributeDurability で計算
+
+木の壁の例:
+
+Material Attributes 材質
+- Wood	木
+
+Weak Effect Attributes 弱点
+- Blunt	鈍器
+- Fire	火
+
+材質相性 硬さの強弱など
+- Metal → Wood = +1	木を金属で叩くときは弱点(+1ダメージ)
+- Wood → Wood = +0	木を木で叩くなら何もなし
+
+つまり
+
+バール
+Effect: Blunt	鈍器
+Material: Metal	金属
+
+なので
+
+木の壁に攻撃
+Blunt一致 = +1
+Metal → Wood = +1
+合計2ダメージ
+
+木の棒
+Effect: Blunt
+Material: Wood
+
+木の壁に攻撃
+Blunt一致 = +1
+Wood → Wood = +0
+合計1ダメージ
+
+金属小物
+Effect: なし
+Material: Metal
+
+木の壁に投げる
+Effect一致なし = 0
+Metal → Wood = +1
+合計1ダメージ
+
+============================================================
+使うファイル
+============================================================
+
+- EffectAttributeType.cs
+- MaterialAttributeType.cs
+- DurabilityBreakMode.cs
+- AttributeDurability.cs
+- ItemUseAction.cs
+- BluntUseAction.cs
+- ThrownItemImpact.cs
+
+PickupItem.cs には PickupItem_PATCH.txt の内容を追加してください。
+
+============================================================
+バール設定例
+============================================================
+
+PickupItem:
+Can Use With Left Click = ON
+Can Throw = ON
+
+Effect Attributes:
+- Blunt
+
+Material Attributes:
+- Metal
+
+AttributeDurability:
+Durability = 20
+Break Mode = DestroyObject
+Ignore Damage While Held = ON
+
+BluntUseAction:
+Player Camera = Main Camera
+
+ThrownItemImpact:
+Min Impact Speed = 4
+Damage Self On Impact = ON
+
+============================================================
+木の壁設定例
+============================================================
+
+AttributeDurability:
+Durability = 5
+Break Mode = DestroyObject
+
+Material Attributes:
+- Wood
+
+Weak Effect Attributes:
+- Blunt
+- Fire
+
+Use Material Damage = ON
+
+============================================================
+ライター設定例
+============================================================
+
+PickupItem:
+Can Use With Left Click = ON
+Can Throw = ON
+
+Effect Attributes:
+- Fire
+
+Material Attributes:
+- Metal
+
+AttributeDurability:
+Durability = 10
+Break Mode = DisableUseOnly
+Disable Use On Break = ON
+Disable Throw On Break = OFF
+
+これで耐久0になると火は付かないが、
+Metal素材として投げたりぶつけたりは可能。

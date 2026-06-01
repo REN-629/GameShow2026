@@ -1,0 +1,42 @@
+InfiniteRoomGenerator.cs への統合メモ
+
+目的:
+Room1から次の部屋が複数生成された場合、
+全部 Level2 として扱う。
+
+必要な考え方:
+新部屋の level は fromRoom の level + 1。
+
+生成時に RoomIdentity.SetupId(targetGrid, nextLevel, parentLevel) を呼ぶ。
+
+追加例:
+
+RoomIdentity fromIdentity = fromRoom.GetComponent<RoomIdentity>();
+int parentLevel = fromIdentity != null ? fromIdentity.roomLevel : 1;
+int nextLevel = parentLevel + 1;
+
+GameObject obj = Instantiate(prefab, GridToWorld(targetGrid), rotation);
+
+RoomCell newRoom = obj.GetComponent<RoomCell>();
+
+newRoom.gridPosition = targetGrid;
+newRoom.generator = this;
+
+RoomIdentity newIdentity = newRoom.GetComponent<RoomIdentity>();
+if (newIdentity != null)
+{
+    newIdentity.SetupId(targetGrid, nextLevel, parentLevel);
+}
+
+スタート部屋:
+RoomIdentity startIdentity = startRoom.GetComponent<RoomIdentity>();
+if (startIdentity != null)
+{
+    startIdentity.SetupId(Vector2Int.zero, 1, 0);
+}
+
+部屋クローンをLevel親の子にしたい場合:
+Transform parent = GetOrCreateLevelParent(nextLevel);
+obj.transform.SetParent(parent, true);
+
+GetOrCreateLevelParentは Dictionary<int, Transform> で管理するとよい。
