@@ -3,9 +3,14 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class TimeDamageTrigger : MonoBehaviour
 {
+    [Header("減らす時間")]
     public float timeDamage = 5f;
+
+    [Header("接触中に継続ダメージ")]
     public bool damageWhileStay = false;
     public float stayDamageInterval = 1f;
+
+    [Header("対象Tag")]
     public string playerTag = "Player";
 
     private float lastStayDamageTime = -999f;

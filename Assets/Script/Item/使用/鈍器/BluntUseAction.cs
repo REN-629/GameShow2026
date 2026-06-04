@@ -1,7 +1,5 @@
-// BluntUseAction：鈍器攻撃
-//
-// バールなどに付ける。
-// 左クリックで前方にSphereCastを飛ばし、壊せる物にダメージを与える。
+//鈍器攻撃 バールなどに付ける
+//左クリックで前方にSphereCastを飛ばし、壊せる物にダメージを与える
 
 using UnityEngine;
 
@@ -17,7 +15,7 @@ public class BluntUseAction : ItemUseAction
 
     public override bool Use(PickupItem item)
     {
-        // バールを振る音は、当たらなくても鳴る
+        //バールを振る音は、当たらなくても鳴る
         PlayUseSE();
 
         if (item == null)
@@ -28,7 +26,8 @@ public class BluntUseAction : ItemUseAction
 
         if (playerCamera == null)
         {
-            Debug.LogWarning("BluntUseAction: playerCamera が未設定");
+            Debug.LogWarning("BluntUseAction: playerCamera割り当て");
+            playerCamera = Camera.main;
             return false;
         }
 

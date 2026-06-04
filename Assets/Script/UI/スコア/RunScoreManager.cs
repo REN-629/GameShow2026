@@ -1,19 +1,12 @@
+//スコア加算
+//パズルクリア時ではなく、次の部屋のTriggerに触れた時
+//ただし同じroomLevelは1回しか加算しない
+
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-// RunScoreManager
-//
-// スコア加算条件:
-// パズルクリア時ではなく、次の部屋のTriggerに触れた時。
-//
-// ただし、同じroomLevelは1回しか加算しない。
-// 例:
-// Room1から次の部屋が2つ生成される
-// どちらもLevel2
-// 先に入った方で+1
-// もう片方に入ってもLevel2は加算済みなので+0
 
 public class RunScoreManager : MonoBehaviour
 {
@@ -42,8 +35,7 @@ public class RunScoreManager : MonoBehaviour
     [Header("デバッグ")]
     public bool debugLog = true;
 
-    private HashSet<int> countedLevels =
-        new HashSet<int>();
+    private HashSet<int> countedLevels = new HashSet<int>();
 
     void Awake()
     {
@@ -56,7 +48,7 @@ public class RunScoreManager : MonoBehaviour
         Instance = this;
         bestReachedRoomCount = PlayerPrefs.GetInt(bestScoreKey, 0);
 
-        // スタート部屋Level1は最初から到達済み扱い。
+        //スタート部屋は最初から到達済み扱い
         countedLevels.Add(1);
         highestReachedLevel = 1;
         reachedRoomCount = 0;
@@ -69,25 +61,25 @@ public class RunScoreManager : MonoBehaviour
         return countedLevels.Contains(level);
     }
 
-    public void RegisterRoomReached(RoomIdentity roomIdentity)
+    public bool RegisterRoomReached(RoomIdentity roomIdentity)
     {
         if (roomIdentity == null)
-            return;
+            return false;
 
-        RegisterRoomReached(roomIdentity.roomLevel, roomIdentity.roomId);
+        return RegisterRoomReached(roomIdentity.roomLevel, roomIdentity.roomId);
     }
 
-    public void RegisterRoomReached(int roomLevel, string roomId)
+    public bool RegisterRoomReached(int roomLevel, string roomId)
     {
         if (roomLevel <= 1)
-            return;
+            return false;
 
         if (countedLevels.Contains(roomLevel))
         {
             if (debugLog)
                 Debug.Log("既に到達スコア加算済み Level: " + roomLevel);
 
-            return;
+            return false;
         }
 
         countedLevels.Add(roomLevel);
@@ -117,6 +109,7 @@ public class RunScoreManager : MonoBehaviour
         }
 
         UpdateUI();
+        return true;
     }
 
     public void ResetRunScore()
@@ -132,8 +125,8 @@ public class RunScoreManager : MonoBehaviour
 
     public void UpdateUI()
     {
-        string reachedTextValue = "ROOM : " + reachedRoomCount;
-        string bestTextValue = "BEST : " + bestReachedRoomCount;
+        string reachedTextValue = " " + reachedRoomCount;
+        string bestTextValue = " " + bestReachedRoomCount;
 
         if (reachedRoomTMP != null)
             reachedRoomTMP.text = reachedTextValue;

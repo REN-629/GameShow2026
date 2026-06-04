@@ -53,9 +53,36 @@ public class RoomCell : MonoBehaviour
 
         RoomIdentity identity = GetComponent<RoomIdentity>();
 
-        if (identity != null && RunScoreManager.Instance != null)
+        bool scoreAdded = false;
+
+        if (identity != null)
         {
-            RunScoreManager.Instance.RegisterRoomReached(identity);
+            if (RunScoreManager.Instance != null)
+            {
+                scoreAdded = RunScoreManager.Instance.RegisterRoomReached(identity);
+            }
+            else
+            {
+                Debug.LogWarning("RunScoreManager がありません");
+            }
+
+            // スコアが実際に加算された時だけ、時間加算と+1表示を行う
+            if (scoreAdded)
+            {
+                if (RoomRunTimer.RunInstance != null)
+                {
+                    RoomRunTimer.RunInstance.OnRoomLevelReached(identity);
+                }
+
+                if (ScoreDeltaNotifier.Instance != null)
+                {
+                    ScoreDeltaNotifier.Instance.AddScoreDelta(1);
+                }
+            }
+        }
+        else
+        {
+            Debug.LogWarning(name + " に RoomIdentity がありません");
         }
 
         if (hasPlayerEntered && generateOnlyOnce)

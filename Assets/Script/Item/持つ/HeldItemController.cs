@@ -1,22 +1,20 @@
-// HeldItemController：選択中アイテムを手に表示する
-//
-// 役割：
-// ・Inventoryの選択中スロットを見る
-// ・選択中アイテムをHeld状態にする
-// ・HoldPointに追従させる
-// ・左クリック使用
-// ・右クリック回転
-//
-// 重要：
-// 投げる時は ReleaseHeldItemForThrow() を使う。
-// 投げる時に SetStoredState() を呼ばないようにするため。
-
+//選択中アイテムを手に表示する
+//重要
+//投げる時は ReleaseHeldItemForThrow() を使う
+//投げる時に SetStoredState() を呼ばないようにするため
 using UnityEngine;
 
 public class HeldItemController : MonoBehaviour
 {
     public Inventory inventory;
     public HoldPointManager holdPointManager;
+
+    [Header("壁貫通防止")]
+    public bool preventHeldItemClipping = true;
+    public float clipCheckRadius = 0.2f;
+    public float wallPadding = 0.05f;
+    public LayerMask wallMask;
+
 
     [Header("使用時演出")]
     public HeldItemUseAnimator useAnimator;
@@ -51,7 +49,65 @@ public class HeldItemController : MonoBehaviour
             useRot = useAnimator.CurrentRotationOffset;
         }
 
-        currentHeldItem.ForceHoldTransform(holdPoint, usePos, useRot);
+        //不要
+        //currentHeldItem.ForceHoldTransform(holdPoint, usePos, useRot);
+
+        Vector3 desiredPos =
+    holdPoint.position + holdPoint.TransformDirection(usePos);
+
+        Vector3 safePos =
+            GetSafeHoldPosition(desiredPos);
+
+        Transform itemTransform =
+            currentHeldItem.transform;
+
+        Vector3 originalPos =
+            itemTransform.position;
+
+        itemTransform.position = safePos;
+
+        currentHeldItem.ForceHoldTransform(
+            holdPoint,
+            usePos,
+            useRot
+        );
+
+        itemTransform.position = safePos;
+    }
+
+    Vector3 GetSafeHoldPosition(Vector3 desiredPosition)
+    {
+        if (!preventHeldItemClipping)
+            return desiredPosition;
+
+        Camera cam = Camera.main;
+
+        if (cam == null)
+            return desiredPosition;
+
+        Vector3 start = cam.transform.position;
+        Vector3 dir = desiredPosition - start;
+
+        float distance = dir.magnitude;
+
+        if (distance <= 0.01f)
+            return desiredPosition;
+
+        dir.Normalize();
+
+        if (Physics.SphereCast(
+            start,
+            clipCheckRadius,
+            dir,
+            out RaycastHit hit,
+            distance,
+            wallMask,
+            QueryTriggerInteraction.Ignore))
+        {
+            return hit.point - dir * wallPadding;
+        }
+
+        return desiredPosition;
     }
 
     void UpdateHeldItem()
@@ -64,8 +120,8 @@ public class HeldItemController : MonoBehaviour
         if (currentHeldItem == selectedItem)
             return;
 
-        // 前に持っていたアイテムは収納状態へ
-        // ただし投げる時は ReleaseHeldItemForThrow() で先に null にするため、ここは走らない。
+        //前に持っていたアイテムは収納状態へ
+        //ただし投げる時は ReleaseHeldItemForThrow() で先に null にするため、ここは走らない
         if (currentHeldItem != null)
         {
             currentHeldItem.SetStoredState();
@@ -171,4 +227,6 @@ public class HeldItemController : MonoBehaviour
             useAnimator.ForceStop();
         }
     }
+
+
 }

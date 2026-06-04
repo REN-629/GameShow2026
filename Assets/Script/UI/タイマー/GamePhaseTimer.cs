@@ -13,6 +13,7 @@ public class GamePhaseTimer : MonoBehaviour
 {
     public static GamePhaseTimer Instance { get; private set; }
 
+
     [Header("時間")]
     public float startTime = 60f;
     public float currentTime = 60f;
@@ -81,11 +82,13 @@ public class GamePhaseTimer : MonoBehaviour
 
         currentTime += amount;
 
+        if (deltaPopup != null && Mathf.Abs(amount) > 0.01f)
+        {
+            deltaPopup.AddDelta(amount);
+        }
+
         if (currentTime < 0f)
             currentTime = 0f;
-
-        if (deltaPopup != null && Mathf.Abs(amount) > 0.01f)
-            deltaPopup.AddDelta(amount);
 
         UpdateUI();
 
@@ -152,4 +155,7 @@ public class GamePhaseTimer : MonoBehaviour
         if (timerText != null)
             timerText.text = value;
     }
+
+
+
 }
