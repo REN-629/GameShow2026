@@ -188,8 +188,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   anchor: 4
-  chunks: 60
-  density: 5
+  chunks: 30
+  density: 2
   internalStrength: 5
   insideMaterial: {fileID: 1280446133571650962, guid: ab7437c47894cb54d845cb3f2a83e3c0,
     type: 3}
@@ -221,7 +221,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   doorBody: {fileID: 7577263964383678519}
   slideDownDistance: 6.5
-  moveSpeed: 2
+  moveSpeed: 4
   disableCollidersWhenOpen: 1
   enableCollidersWhenClosed: 1
   debugLog: 1

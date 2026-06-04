@@ -1,5 +1,4 @@
-// FractureThis：耐久0になった時にオブジェクトを破片化するスクリプト
-// 全修正版：Startで破砕しない、元モデルを消す、破片を縮小して消す。
+//FractureThis：耐久0になった時にオブジェクトを破片化するスクリプト
 
 using UnityEngine;
 using Random = System.Random;
