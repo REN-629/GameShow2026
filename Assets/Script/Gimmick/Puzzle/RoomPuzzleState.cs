@@ -1,73 +1,46 @@
 using UnityEngine;
 
-// RoomPuzzleState
-//
-// この版ではスコア加算はしない。
-// スコアは次の部屋Triggerに触れた時にRunScoreManagerが加算する。
-//
-// ここでは「この部屋をどう攻略状態にしたか」だけを記録する。
-
 public class RoomPuzzleState : MonoBehaviour
 {
     [Header("この部屋の扉")]
     public DoorController[] roomDoors;
 
-    [Header("状態")]
-    public bool puzzleCleared = false;
+    [Header("ドア開放条件")]
+    public bool doorOpenCondition = false;
 
-    [Header("クリア方法")]
-    public RoomClearMethod clearMethod = RoomClearMethod.Unknown;
+    [Header("最後にドアを開けた方法")]
+    public PuzzleSolveMethod lastSolveMethod = PuzzleSolveMethod.Unknown;
 
     [Header("デバッグ")]
     public bool debugLog = true;
 
-    public void ClearPuzzle()
+    public void SetDoorOpenCondition(bool open)
     {
-        SetPuzzleState(true, RoomClearMethod.NormalPuzzle);
+        SetDoorOpenCondition(open, PuzzleSolveMethod.Unknown);
     }
 
-    public void ClearPuzzle(RoomClearMethod method)
+    public void SetDoorOpenCondition(bool open, PuzzleSolveMethod method)
     {
-        SetPuzzleState(true, method);
-    }
+        doorOpenCondition = open;
 
-    public void ResetPuzzle()
-    {
-        SetPuzzleState(false, clearMethod);
-    }
-
-    public void SetPuzzleState(bool cleared)
-    {
-        SetPuzzleState(cleared, RoomClearMethod.Unknown);
-    }
-
-    public void SetPuzzleState(bool cleared, RoomClearMethod method)
-    {
-        if (puzzleCleared == cleared)
-            return;
-
-        puzzleCleared = cleared;
-
-        if (cleared && method != RoomClearMethod.Unknown)
-        {
-            clearMethod = method;
-            RegisterClearMethodOnce(method);
-        }
+        if (method != PuzzleSolveMethod.Unknown)
+            lastSolveMethod = method;
 
         if (debugLog)
         {
             Debug.Log(
                 name
-                + " のパズル状態: "
-                + (puzzleCleared ? "クリア" : "未クリア")
+                + " DoorCondition="
+                + doorOpenCondition
                 + " / method="
-                + clearMethod
+                + lastSolveMethod
             );
         }
 
-        if (puzzleCleared)
+        if (doorOpenCondition)
         {
             OpenDoors();
+            RegisterSolveMethod(lastSolveMethod);
         }
         else
         {
@@ -75,20 +48,19 @@ public class RoomPuzzleState : MonoBehaviour
         }
     }
 
-    void RegisterClearMethodOnce(RoomClearMethod method)
+    public void ClearPuzzle()
     {
-        RoomIdentity identity = GetComponent<RoomIdentity>();
-
-        if (identity == null)
-            return;
-
-        if (RunActionLogger.Instance != null)
-            RunActionLogger.Instance.SetRoomClearMethod(identity.roomId, method);
+        SetDoorOpenCondition(true, PuzzleSolveMethod.Normal);
     }
 
-    public void RegisterBypassedIfNotCleared()
+    public void ResetPuzzle()
     {
-        if (puzzleCleared)
+        SetDoorOpenCondition(false, lastSolveMethod);
+    }
+
+    void RegisterSolveMethod(PuzzleSolveMethod method)
+    {
+        if (method == PuzzleSolveMethod.Unknown)
             return;
 
         RoomIdentity identity = GetComponent<RoomIdentity>();
@@ -97,7 +69,37 @@ public class RoomPuzzleState : MonoBehaviour
             return;
 
         if (RunActionLogger.Instance != null)
-            RunActionLogger.Instance.SetRoomClearMethod(identity.roomId, RoomClearMethod.BypassedPuzzle);
+        {
+            RunActionLogger.Instance.SetRoomClearMethod(
+                identity.roomId,
+                ConvertToRoomClearMethod(method)
+            );
+        }
+    }
+
+    RoomClearMethod ConvertToRoomClearMethod(PuzzleSolveMethod method)
+    {
+        switch (method)
+        {
+            case PuzzleSolveMethod.Normal:
+                return RoomClearMethod.NormalPuzzle;
+
+            case PuzzleSolveMethod.Weight:
+            case PuzzleSolveMethod.Item:
+                return RoomClearMethod.ItemShortcut;
+
+            case PuzzleSolveMethod.Break:
+            case PuzzleSolveMethod.Force:
+                return RoomClearMethod.ForceBreak;
+
+            case PuzzleSolveMethod.Shortcut:
+                return RoomClearMethod.ItemShortcut;
+
+            case PuzzleSolveMethod.Bypass:
+                return RoomClearMethod.BypassedPuzzle;
+        }
+
+        return RoomClearMethod.Unknown;
     }
 
     public void OpenDoors()

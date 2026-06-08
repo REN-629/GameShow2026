@@ -5,10 +5,10 @@ public class RoomPuzzleTarget : MonoBehaviour
     [Header("このパズルが操作する部屋")]
     public RoomPuzzleState targetRoom;
 
-    [Header("このパズルのクリア方法")]
-    public RoomClearMethod clearMethod = RoomClearMethod.NormalPuzzle;
+    [Header("解法カテゴリ")]
+    public PuzzleSolveMethod solveMethod = PuzzleSolveMethod.Normal;
 
-    public void SetCleared(bool cleared)
+    public void SetDoorOpen(bool open)
     {
         RoomPuzzleState room = GetTargetRoom();
 
@@ -18,20 +18,22 @@ public class RoomPuzzleTarget : MonoBehaviour
             return;
         }
 
-        if (cleared)
-            room.SetPuzzleState(true, clearMethod);
-        else
-            room.SetPuzzleState(false, clearMethod);
+        room.SetDoorOpenCondition(open, solveMethod);
     }
 
     public void ClearTargetRoom()
     {
-        SetCleared(true);
+        SetDoorOpen(true);
     }
 
     public void ResetTargetRoom()
     {
-        SetCleared(false);
+        SetDoorOpen(false);
+    }
+
+    public void SetCleared(bool cleared)
+    {
+        SetDoorOpen(cleared);
     }
 
     RoomPuzzleState GetTargetRoom()

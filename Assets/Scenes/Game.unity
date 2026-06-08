@@ -2024,7 +2024,6 @@ GameObject:
   m_Component:
   - component: {fileID: 548501563}
   - component: {fileID: 548501566}
-  - component: {fileID: 548501565}
   - component: {fileID: 548501564}
   m_Layer: 0
   m_Name: HeldItemCamera
@@ -2092,14 +2091,6 @@ MonoBehaviour:
     m_MipBias: 0
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
---- !u!81 &548501565
-AudioListener:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 548501562}
-  m_Enabled: 1
 --- !u!20 &548501566
 Camera:
   m_ObjectHideFlags: 0
@@ -2419,7 +2410,7 @@ MonoBehaviour:
   deltaText: {fileID: 641735837}
   showDuration: 5
   blinkDuration: 1
-  blinkInterval: 0.12
+  blinkInterval: 0.5
   roundToInt: 1
   showPlusSign: 1
 --- !u!1 &651330600
@@ -3457,7 +3448,7 @@ MonoBehaviour:
   deltaText: {fileID: 985639119}
   showDuration: 5
   blinkDuration: 1
-  blinkInterval: 0.12
+  blinkInterval: 0.5
   roundToInt: 1
   showPlusSign: 1
 --- !u!114 &985639119
@@ -4523,6 +4514,11 @@ MonoBehaviour:
   - {fileID: 3899988545844213169, guid: 2b129901cecd1e34aad9b7c8698ee2c9, type: 3}
   - {fileID: 3899988545844213169, guid: 63449f724ffdd2a4fa02b1a202a65316, type: 3}
   - {fileID: 3899988545844213169, guid: 1453b4645a2940244af9e0e5dbf89bbe, type: 3}
+  - {fileID: 3899988545844213169, guid: b6a75d9272c6d01439729e64de4cefa6, type: 3}
+  - {fileID: 3899988545844213169, guid: 5bc27b10f36fb8d419d079eff76f49c5, type: 3}
+  - {fileID: 3899988545844213169, guid: 19ff1330a7a10894c8fd1f180ae2e72a, type: 3}
+  - {fileID: 3899988545844213169, guid: b9a6d510f58dcca4b9113bfc4dab48ab, type: 3}
+  - {fileID: 3899988545844213169, guid: c8b30508a1346b14d92895ca5d551fa6, type: 3}
   doorPrefabs:
   - {fileID: 8512036536275225885, guid: 67f3488e8bef1ff4f8632e4e3dbdd71b, type: 3}
   - {fileID: 5196458409043475981, guid: ba69c7f259c1dc24a9722592f55ea4f4, type: 3}
