@@ -1,12 +1,4 @@
-// HoldPointManager：HoldTypeに応じて使うHoldPointを返す
-//
-// Main Cameraの子にHoldPointを作る例：
-// Main Camera
-// ├ HoldPoint_OneHand
-// ├ HoldPoint_TwoHand
-// ├ HoldPoint_Heavy
-// └ HoldPoint_Inspect
-
+//HoldTypeに応じて使うHoldPointを返す
 using UnityEngine;
 
 public class HoldPointManager : MonoBehaviour

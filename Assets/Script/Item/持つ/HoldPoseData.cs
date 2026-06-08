@@ -1,5 +1,5 @@
-// HoldPoseData：アイテムを手に持った時の見た目位置を決めるデータ
-// アイテムごとにInspectorで調整する
+//アイテムを手に持った時の位置を決めるデータ
+//Inspectorでアイテムごとに調整
 using UnityEngine;
 
 [System.Serializable]

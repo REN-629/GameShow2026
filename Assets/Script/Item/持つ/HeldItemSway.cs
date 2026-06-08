@@ -1,13 +1,4 @@
-// HeldItemSway：HoldPointを歩行やジャンプに合わせて少し揺らす
-//
-// 付ける場所：
-// HoldPoint、またはHoldPointの親オブジェクト
-//
-// 例：
-// Main Camera
-// └ HoldPoint_TwoHand_Base ← HeldItemSway
-//    └ HoldPoint_TwoHand
-
+//手に持ってるアイテムを歩行やジャンプに合わせて少し揺らす
 using UnityEngine;
 
 public class HeldItemSway : MonoBehaviour

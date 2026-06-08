@@ -1,13 +1,4 @@
-//選択中アイテムを手に表示する
-//重要
-//投げる時は ReleaseHeldItemForThrow() を使う
-//投げる時に SetStoredState() を呼ばないようにするため
-//
-// 追加:
-// ・壁押し戻し方式は削除
-// ・持っている間だけアイテムを HeldItem Layer に変更
-// ・収納/投げる/参照クリア時に元のLayerへ戻す
-
+//選択中のアイテムを手に表示する
 using UnityEngine;
 
 public class HeldItemController : MonoBehaviour
@@ -15,19 +6,19 @@ public class HeldItemController : MonoBehaviour
     public Inventory inventory;
     public HoldPointManager holdPointManager;
 
-    [Header("手持ちアイテム専用Layer")]
-    public bool useHeldItemLayer = true;
-
-    [Tooltip("手持ち中に切り替えるLayer名")]
-    public string heldItemLayerName = "HeldItem";
-
-    [Tooltip("手放した時に戻すLayer名")]
-    public string defaultLayerName = "Default";
-
     [Header("使用時演出")]
     public HeldItemUseAnimator useAnimator;
 
+    [Header("持ち替え演出")]
+    public HeldItemSwitchAnimator switchAnimator;
+
+    [Header("手持ちアイテム専用Layer")]
+    public bool useHeldItemLayer = true;
+    public string heldItemLayerName = "HeldItem";
+    public string defaultLayerName = "Default";
+
     private PickupItem currentHeldItem;
+    private PickupItem pendingItem;
 
     public bool IsRotatingItem { get; private set; }
 
@@ -57,10 +48,19 @@ public class HeldItemController : MonoBehaviour
             useRot = useAnimator.CurrentRotationOffset;
         }
 
+        Vector3 switchPos = Vector3.zero;
+        Vector3 switchRot = Vector3.zero;
+
+        if (switchAnimator != null)
+        {
+            switchPos = switchAnimator.CurrentPositionOffset;
+            switchRot = switchAnimator.CurrentRotationOffset;
+        }
+
         currentHeldItem.ForceHoldTransform(
             holdPoint,
-            usePos,
-            useRot
+            usePos + switchPos,
+            useRot + switchRot
         );
     }
 
@@ -74,8 +74,23 @@ public class HeldItemController : MonoBehaviour
         if (currentHeldItem == selectedItem)
             return;
 
-        // 前に持っていたアイテムは収納状態へ
-        // ただし投げる時は ReleaseHeldItemForThrow() で先に null にするため、ここは走らない
+        if (pendingItem == selectedItem && switchAnimator != null && switchAnimator.IsSwitching)
+            return;
+
+        pendingItem = selectedItem;
+
+        if (switchAnimator != null)
+        {
+            switchAnimator.StartSwitch(SwitchToPendingItem);
+        }
+        else
+        {
+            SwitchToPendingItem();
+        }
+    }
+
+    void SwitchToPendingItem()
+    {
         if (currentHeldItem != null)
         {
             RestoreItemLayer(currentHeldItem);
@@ -83,11 +98,10 @@ public class HeldItemController : MonoBehaviour
         }
 
         if (useAnimator != null)
-        {
             useAnimator.ForceStop();
-        }
 
-        currentHeldItem = selectedItem;
+        currentHeldItem = pendingItem;
+        pendingItem = null;
 
         if (currentHeldItem != null)
         {
@@ -97,15 +111,16 @@ public class HeldItemController : MonoBehaviour
             Transform holdPoint = holdPointManager.GetHoldPoint(currentHeldItem.holdType);
 
             if (holdPoint != null)
-            {
                 currentHeldItem.ForceHoldTransform(holdPoint);
-            }
         }
     }
 
     void HandleUse()
     {
         if (currentHeldItem == null)
+            return;
+
+        if (switchAnimator != null && switchAnimator.IsSwitching)
             return;
 
         if (!Input.GetMouseButtonDown(0))
@@ -120,9 +135,7 @@ public class HeldItemController : MonoBehaviour
         currentHeldItem.Use();
 
         if (useAnimator != null)
-        {
             useAnimator.PlayUseAnimation(currentHeldItem.holdPose);
-        }
     }
 
     void HandleRotation()
@@ -130,6 +143,9 @@ public class HeldItemController : MonoBehaviour
         IsRotatingItem = false;
 
         if (currentHeldItem == null)
+            return;
+
+        if (switchAnimator != null && switchAnimator.IsSwitching)
             return;
 
         if (!currentHeldItem.canRotate)
@@ -155,10 +171,7 @@ public class HeldItemController : MonoBehaviour
 
     void ApplyHeldItemLayer(PickupItem item)
     {
-        if (!useHeldItemLayer)
-            return;
-
-        if (item == null)
+        if (!useHeldItemLayer || item == null)
             return;
 
         int layer = LayerMask.NameToLayer(heldItemLayerName);
@@ -209,36 +222,36 @@ public class HeldItemController : MonoBehaviour
     public void ClearHeldReference()
     {
         if (currentHeldItem != null)
-        {
             RestoreItemLayer(currentHeldItem);
-        }
 
         currentHeldItem = null;
+        pendingItem = null;
         IsRotatingItem = false;
 
         if (useAnimator != null)
-        {
             useAnimator.ForceStop();
-        }
+
+        if (switchAnimator != null)
+            switchAnimator.ForceStop();
     }
 
     public void ReleaseHeldItemForThrow(PickupItem item)
     {
         if (item != null)
-        {
             RestoreItemLayer(item);
-        }
 
         if (currentHeldItem == item)
-        {
             currentHeldItem = null;
-        }
+
+        if (pendingItem == item)
+            pendingItem = null;
 
         IsRotatingItem = false;
 
         if (useAnimator != null)
-        {
             useAnimator.ForceStop();
-        }
+
+        if (switchAnimator != null)
+            switchAnimator.ForceStop();
     }
 }
