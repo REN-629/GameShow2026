@@ -10,6 +10,9 @@ public class PickupItem : MonoBehaviour
     [Header("アイテムデータ")]
     public ItemData itemData;
 
+    [Header("UI")]
+    public Sprite itemIcon;
+
     [Header("重量")]
     [Tooltip("このアイテムの重さ。最大重量100を基準にする。例：ライター2、バール12、箱30")]
     public float itemWeight = 1f;

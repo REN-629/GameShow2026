@@ -2,6 +2,12 @@
 //重要
 //投げる時は ReleaseHeldItemForThrow() を使う
 //投げる時に SetStoredState() を呼ばないようにするため
+//
+// 追加:
+// ・壁押し戻し方式は削除
+// ・持っている間だけアイテムを HeldItem Layer に変更
+// ・収納/投げる/参照クリア時に元のLayerへ戻す
+
 using UnityEngine;
 
 public class HeldItemController : MonoBehaviour
@@ -9,12 +15,14 @@ public class HeldItemController : MonoBehaviour
     public Inventory inventory;
     public HoldPointManager holdPointManager;
 
-    [Header("壁貫通防止")]
-    public bool preventHeldItemClipping = true;
-    public float clipCheckRadius = 0.2f;
-    public float wallPadding = 0.05f;
-    public LayerMask wallMask;
+    [Header("手持ちアイテム専用Layer")]
+    public bool useHeldItemLayer = true;
 
+    [Tooltip("手持ち中に切り替えるLayer名")]
+    public string heldItemLayerName = "HeldItem";
+
+    [Tooltip("手放した時に戻すLayer名")]
+    public string defaultLayerName = "Default";
 
     [Header("使用時演出")]
     public HeldItemUseAnimator useAnimator;
@@ -49,65 +57,11 @@ public class HeldItemController : MonoBehaviour
             useRot = useAnimator.CurrentRotationOffset;
         }
 
-        //不要
-        //currentHeldItem.ForceHoldTransform(holdPoint, usePos, useRot);
-
-        Vector3 desiredPos =
-    holdPoint.position + holdPoint.TransformDirection(usePos);
-
-        Vector3 safePos =
-            GetSafeHoldPosition(desiredPos);
-
-        Transform itemTransform =
-            currentHeldItem.transform;
-
-        Vector3 originalPos =
-            itemTransform.position;
-
-        itemTransform.position = safePos;
-
         currentHeldItem.ForceHoldTransform(
             holdPoint,
             usePos,
             useRot
         );
-
-        itemTransform.position = safePos;
-    }
-
-    Vector3 GetSafeHoldPosition(Vector3 desiredPosition)
-    {
-        if (!preventHeldItemClipping)
-            return desiredPosition;
-
-        Camera cam = Camera.main;
-
-        if (cam == null)
-            return desiredPosition;
-
-        Vector3 start = cam.transform.position;
-        Vector3 dir = desiredPosition - start;
-
-        float distance = dir.magnitude;
-
-        if (distance <= 0.01f)
-            return desiredPosition;
-
-        dir.Normalize();
-
-        if (Physics.SphereCast(
-            start,
-            clipCheckRadius,
-            dir,
-            out RaycastHit hit,
-            distance,
-            wallMask,
-            QueryTriggerInteraction.Ignore))
-        {
-            return hit.point - dir * wallPadding;
-        }
-
-        return desiredPosition;
     }
 
     void UpdateHeldItem()
@@ -120,10 +74,11 @@ public class HeldItemController : MonoBehaviour
         if (currentHeldItem == selectedItem)
             return;
 
-        //前に持っていたアイテムは収納状態へ
-        //ただし投げる時は ReleaseHeldItemForThrow() で先に null にするため、ここは走らない
+        // 前に持っていたアイテムは収納状態へ
+        // ただし投げる時は ReleaseHeldItemForThrow() で先に null にするため、ここは走らない
         if (currentHeldItem != null)
         {
+            RestoreItemLayer(currentHeldItem);
             currentHeldItem.SetStoredState();
         }
 
@@ -137,6 +92,7 @@ public class HeldItemController : MonoBehaviour
         if (currentHeldItem != null)
         {
             currentHeldItem.SetHeldState();
+            ApplyHeldItemLayer(currentHeldItem);
 
             Transform holdPoint = holdPointManager.GetHoldPoint(currentHeldItem.holdType);
 
@@ -197,6 +153,54 @@ public class HeldItemController : MonoBehaviour
         }
     }
 
+    void ApplyHeldItemLayer(PickupItem item)
+    {
+        if (!useHeldItemLayer)
+            return;
+
+        if (item == null)
+            return;
+
+        int layer = LayerMask.NameToLayer(heldItemLayerName);
+
+        if (layer < 0)
+        {
+            Debug.LogWarning("Layerが見つかりません: " + heldItemLayerName);
+            return;
+        }
+
+        SetLayerRecursively(item.gameObject, layer);
+    }
+
+    void RestoreItemLayer(PickupItem item)
+    {
+        if (item == null)
+            return;
+
+        int layer = LayerMask.NameToLayer(defaultLayerName);
+
+        if (layer < 0)
+        {
+            Debug.LogWarning("Layerが見つかりません: " + defaultLayerName);
+            return;
+        }
+
+        SetLayerRecursively(item.gameObject, layer);
+    }
+
+    void SetLayerRecursively(GameObject obj, int layer)
+    {
+        if (obj == null)
+            return;
+
+        obj.layer = layer;
+
+        foreach (Transform child in obj.transform)
+        {
+            SetLayerRecursively(child.gameObject, layer);
+        }
+    }
+
     public PickupItem GetCurrentHeldItem()
     {
         return currentHeldItem;
@@ -204,6 +208,11 @@ public class HeldItemController : MonoBehaviour
 
     public void ClearHeldReference()
     {
+        if (currentHeldItem != null)
+        {
+            RestoreItemLayer(currentHeldItem);
+        }
+
         currentHeldItem = null;
         IsRotatingItem = false;
 
@@ -215,6 +224,11 @@ public class HeldItemController : MonoBehaviour
 
     public void ReleaseHeldItemForThrow(PickupItem item)
     {
+        if (item != null)
+        {
+            RestoreItemLayer(item);
+        }
+
         if (currentHeldItem == item)
         {
             currentHeldItem = null;
@@ -227,6 +241,4 @@ public class HeldItemController : MonoBehaviour
             useAnimator.ForceStop();
         }
     }
-
-
 }

@@ -34,13 +34,9 @@ public class InventoryUI : MonoBehaviour
             PickupItem item = inventory.GetItemAt(i);
             bool selected = (i == inventory.selectedIndex);
 
-            if (item == null)
+            if (slots[i] != null)
             {
-                slots[i].SetItem(null, selected);
-            }
-            else
-            {
-                slots[i].SetItem(item.itemData, selected);
+                slots[i].SetItem(item, selected);
             }
         }
     }

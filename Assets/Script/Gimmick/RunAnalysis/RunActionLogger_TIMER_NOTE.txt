@@ -1,6 +1,0 @@
-RoomRunTimerは到達したRoomIdentityのroomIdから、
-RunActionLogger.GetRoomClearMethod(roomId) を見てボーナス計算します。
-
-前の部屋の突破方法にしたい場合は、
-今後 previousRoomId をRoomIdentityに追加して、
-次部屋到達時に前部屋IDを見る形に拡張してください。

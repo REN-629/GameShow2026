@@ -1,3 +1,4 @@
+//リザルトテキスト用
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;

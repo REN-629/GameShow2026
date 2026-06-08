@@ -340,6 +340,7 @@ GameObject:
   - component: {fileID: 9216428831327185266}
   - component: {fileID: 3698228817995760151}
   - component: {fileID: 6326321259457498968}
+  - component: {fileID: 2689583592860793457}
   - component: {fileID: 7709995287984275503}
   m_Layer: 0
   m_Name: "\u61D0\u4E2D\u96FB\u706F"
@@ -381,6 +382,7 @@ MonoBehaviour:
   itemData:
     itemName: "\u61D0\u4E2D\u96FB\u706F"
     attributes: []
+  itemIcon: {fileID: 21300000, guid: 35c78e82c3ce64743bb8f70ef4447e7d, type: 3}
   itemWeight: 2
   currentState: 0
   canUseWithLeftClick: 1
@@ -494,6 +496,22 @@ MonoBehaviour:
   strongSpeed: 7
   soundCooldown: 0.12
   muteWhileHeld: 1
+--- !u!114 &2689583592860793457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7698861355482939463}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d16ecc5357e3a95469d7ffd7171af121, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  visualRoots:
+  - {fileID: 7121550090342213618}
+  autoFindRenderersIfEmpty: 1
+  skipObjectsWithCollider: 1
 --- !u!54 &7709995287984275503
 Rigidbody:
   m_ObjectHideFlags: 0
