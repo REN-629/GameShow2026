@@ -27,15 +27,7 @@ public class RoomPuzzleState : MonoBehaviour
             lastSolveMethod = method;
 
         if (debugLog)
-        {
-            Debug.Log(
-                name
-                + " DoorCondition="
-                + doorOpenCondition
-                + " / method="
-                + lastSolveMethod
-            );
-        }
+            Debug.Log(name + " DoorCondition=" + doorOpenCondition + " / method=" + lastSolveMethod);
 
         if (doorOpenCondition)
         {
@@ -69,12 +61,7 @@ public class RoomPuzzleState : MonoBehaviour
             return;
 
         if (RunActionLogger.Instance != null)
-        {
-            RunActionLogger.Instance.SetRoomClearMethod(
-                identity.roomId,
-                ConvertToRoomClearMethod(method)
-            );
-        }
+            RunActionLogger.Instance.SetRoomClearMethod(identity.roomId, ConvertToRoomClearMethod(method));
     }
 
     RoomClearMethod ConvertToRoomClearMethod(PuzzleSolveMethod method)
@@ -83,18 +70,13 @@ public class RoomPuzzleState : MonoBehaviour
         {
             case PuzzleSolveMethod.Normal:
                 return RoomClearMethod.NormalPuzzle;
-
-            case PuzzleSolveMethod.Weight:
             case PuzzleSolveMethod.Item:
+            case PuzzleSolveMethod.Weight:
+            case PuzzleSolveMethod.Shortcut:
                 return RoomClearMethod.ItemShortcut;
-
             case PuzzleSolveMethod.Break:
             case PuzzleSolveMethod.Force:
                 return RoomClearMethod.ForceBreak;
-
-            case PuzzleSolveMethod.Shortcut:
-                return RoomClearMethod.ItemShortcut;
-
             case PuzzleSolveMethod.Bypass:
                 return RoomClearMethod.BypassedPuzzle;
         }

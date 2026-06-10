@@ -154,7 +154,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b31353483148f54097559719dea5071, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  requiredWeight: 20
+  requiredWeight: 10
   playerWeight: 10
   plateModel: {fileID: 8084505867124466335}
   pressedOffset: {x: 0, y: -0.2, z: 0}
@@ -163,10 +163,10 @@ MonoBehaviour:
   normalMaterial: {fileID: -2048830346878817264, guid: ac3c30facbd791149b264a4003feb7ab,
     type: 3}
   clearedMaterial: {fileID: 2100000, guid: 55162ad2422d980459302b0ec10a20da, type: 2}
-  resetWhenWeightRemoved: 1
-  holdToKeepOpen: 1
   useInventoryWeightData: 1
   fallbackToRigidbodyMass: 1
+  validateObjectsEveryFrame: 1
+  boundsPadding: 0.05
   debugLog: 1
   showWeightEveryFrame: 0
 --- !u!114 &47048621714939835

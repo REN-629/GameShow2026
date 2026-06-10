@@ -1,31 +1,8 @@
-// PressurePlatePuzzle.cs
-//
-// 重量式ボタン / 重量スイッチ
-//
-// 修正版:
-// ・重量条件達成時にマテリアル変更
-// ・重量不足で元のマテリアルへ戻す
-// ・重りを置いている間だけドアを開く
-//
-// 推奨構成:
-//
-// PressurePlate
-// ├ PlateModel
-// │  ├ MeshRenderer
-// │  └ BoxCollider               ← Is Trigger OFF / 上に乗る用
-// └ WeightTrigger
-//    ├ BoxCollider               ← Is Trigger ON / 判定用
-//    ├ RoomPuzzleTarget
-//    └ PressurePlatePuzzle       ← このスクリプト
-//
-// PressurePlatePuzzle の:
-// Plate Model → PlateModel
-// Button Renderer → PlateModel の MeshRenderer
-
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
+[RequireComponent(typeof(Collider))]
 public class PressurePlatePuzzle : MonoBehaviour
 {
     [Header("必要重量")]
@@ -39,26 +16,16 @@ public class PressurePlatePuzzle : MonoBehaviour
     public Vector3 pressedOffset = new Vector3(0f, -0.05f, 0f);
     public float pressSmooth = 10f;
 
-    [Header("見た目：マテリアル変更")]
-    [Tooltip("ボタンのRenderer")]
+    [Header("見た目")]
     public Renderer buttonRenderer;
-
-    [Tooltip("通常時Material")]
     public Material normalMaterial;
-
-    [Tooltip("押された時Material")]
     public Material clearedMaterial;
-
-    [Header("クリア解除設定")]
-    [Tooltip("ONなら、重量が足りなくなった時にパズル未クリアへ戻す")]
-    public bool resetWhenWeightRemoved = true;
-
-    [Tooltip("ONなら、必要重量を満たしている間だけクリア扱い")]
-    public bool holdToKeepOpen = true;
 
     [Header("重量計算")]
     public bool useInventoryWeightData = true;
     public bool fallbackToRigidbodyMass = true;
+    public bool validateObjectsEveryFrame = true;
+    public float boundsPadding = 0.05f;
 
     [Header("デバッグ")]
     public bool debugLog = true;
@@ -66,8 +33,16 @@ public class PressurePlatePuzzle : MonoBehaviour
 
     private bool isPressed = false;
     private Vector3 defaultLocalPosition;
-
+    private Collider triggerCollider;
     private readonly List<GameObject> objectsOnPlate = new List<GameObject>();
+
+    void Awake()
+    {
+        triggerCollider = GetComponent<Collider>();
+
+        if (triggerCollider != null)
+            triggerCollider.isTrigger = true;
+    }
 
     void Start()
     {
@@ -75,38 +50,27 @@ public class PressurePlatePuzzle : MonoBehaviour
             plateModel = transform;
 
         defaultLocalPosition = plateModel.localPosition;
-
-        // 初期マテリアル
-        if (buttonRenderer != null && normalMaterial != null)
-        {
-            buttonRenderer.material = normalMaterial;
-        }
+        UpdateButtonMaterial(false);
     }
 
     void Update()
     {
+        if (validateObjectsEveryFrame)
+            ValidateObjectsOnPlate();
+
         float currentWeight = CalculateWeight();
 
         if (showWeightEveryFrame)
-        {
-            Debug.Log(
-                name
-                + " 現在重量: "
-                + currentWeight
-                + " / 必要重量: "
-                + requiredWeight
-            );
-        }
+            Debug.Log(name + " 現在重量: " + currentWeight + " / 必要重量: " + requiredWeight);
 
         bool shouldBePressed = currentWeight >= requiredWeight;
-
         UpdatePlateVisual(shouldBePressed);
 
-        if (shouldBePressed != isPressed)
-        {
-            isPressed = shouldBePressed;
-            ApplyPuzzleState(isPressed);
-        }
+        if (shouldBePressed == isPressed)
+            return;
+
+        isPressed = shouldBePressed;
+        ApplyDoorState(isPressed);
     }
 
     void OnTriggerEnter(Collider other)
@@ -121,14 +85,7 @@ public class PressurePlatePuzzle : MonoBehaviour
             objectsOnPlate.Add(target);
 
             if (debugLog)
-            {
-                Debug.Log(
-                    "重量対象追加: "
-                    + target.name
-                    + " / weight="
-                    + GetObjectWeight(target)
-                );
-            }
+                Debug.Log("重量対象追加: " + target.name + " / weight=" + GetObjectWeight(target));
         }
     }
 
@@ -139,13 +96,90 @@ public class PressurePlatePuzzle : MonoBehaviour
         if (target == null)
             return;
 
-        if (objectsOnPlate.Contains(target))
-        {
-            objectsOnPlate.Remove(target);
+        RemoveObjectFromPlate(target);
+    }
 
-            if (debugLog)
-                Debug.Log("重量対象削除: " + target.name);
+    void ValidateObjectsOnPlate()
+    {
+        for (int i = objectsOnPlate.Count - 1; i >= 0; i--)
+        {
+            GameObject obj = objectsOnPlate[i];
+
+            if (!IsValidWeightObject(obj))
+            {
+                RemoveObjectFromPlateAt(i, obj);
+                continue;
+            }
+
+            if (!IsObjectInsideTrigger(obj))
+                RemoveObjectFromPlateAt(i, obj);
         }
+    }
+
+    bool IsValidWeightObject(GameObject obj)
+    {
+        if (obj == null)
+            return false;
+
+        if (!obj.activeInHierarchy)
+            return false;
+
+        PickupItem item = obj.GetComponent<PickupItem>();
+
+        if (item != null && item.CurrentState != PickupItemState.World)
+            return false;
+
+        return true;
+    }
+
+    bool IsObjectInsideTrigger(GameObject obj)
+    {
+        if (triggerCollider == null)
+            return true;
+
+        Bounds triggerBounds = triggerCollider.bounds;
+        triggerBounds.Expand(boundsPadding);
+
+        Collider[] colliders = obj.GetComponentsInChildren<Collider>(true);
+        bool hasEnabledCollider = false;
+
+        foreach (Collider col in colliders)
+        {
+            if (col == null)
+                continue;
+
+            if (!col.enabled)
+                continue;
+
+            if (col == triggerCollider)
+                continue;
+
+            hasEnabledCollider = true;
+
+            if (triggerBounds.Intersects(col.bounds))
+                return true;
+        }
+
+        if (!hasEnabledCollider)
+            return triggerBounds.Contains(obj.transform.position);
+
+        return false;
+    }
+
+    void RemoveObjectFromPlate(GameObject target)
+    {
+        int index = objectsOnPlate.IndexOf(target);
+
+        if (index >= 0)
+            RemoveObjectFromPlateAt(index, target);
+    }
+
+    void RemoveObjectFromPlateAt(int index, GameObject target)
+    {
+        objectsOnPlate.RemoveAt(index);
+
+        if (debugLog && target != null)
+            Debug.Log("重量対象削除: " + target.name);
     }
 
     GameObject GetWeightRoot(Collider other)
@@ -177,9 +211,9 @@ public class PressurePlatePuzzle : MonoBehaviour
         {
             GameObject obj = objectsOnPlate[i];
 
-            if (obj == null)
+            if (!IsValidWeightObject(obj))
             {
-                objectsOnPlate.RemoveAt(i);
+                RemoveObjectFromPlateAt(i, obj);
                 continue;
             }
 
@@ -196,6 +230,11 @@ public class PressurePlatePuzzle : MonoBehaviour
 
         if (obj.CompareTag("Player"))
             return playerWeight;
+
+        PickupItem pickupItem = obj.GetComponent<PickupItem>();
+
+        if (pickupItem != null)
+            return Mathf.Max(0f, pickupItem.itemWeight);
 
         if (useInventoryWeightData)
         {
@@ -225,19 +264,17 @@ public class PressurePlatePuzzle : MonoBehaviour
             if (component == null)
                 continue;
 
-            float value;
+            if (TryGetFloatMember(component, "weight", out float weight))
+                return weight;
 
-            if (TryGetFloatMember(component, "weight", out value))
-                return value;
+            if (TryGetFloatMember(component, "itemWeight", out float itemWeight))
+                return itemWeight;
 
-            if (TryGetFloatMember(component, "itemWeight", out value))
-                return value;
+            if (TryGetFloatMember(component, "weightValue", out float weightValue))
+                return weightValue;
 
-            if (TryGetFloatMember(component, "weightValue", out value))
-                return value;
-
-            if (TryGetFloatMember(component, "currentWeight", out value))
-                return value;
+            if (TryGetFloatMember(component, "currentWeight", out float currentWeight))
+                return currentWeight;
         }
 
         return -1f;
@@ -246,49 +283,41 @@ public class PressurePlatePuzzle : MonoBehaviour
     bool TryGetFloatMember(Component component, string memberName, out float value)
     {
         value = 0f;
-
         System.Type type = component.GetType();
-
-        FieldInfo field = type.GetField(
-            memberName,
-            BindingFlags.Public | BindingFlags.Instance
-        );
+        FieldInfo field = type.GetField(memberName, BindingFlags.Public | BindingFlags.Instance);
 
         if (field != null)
         {
             object fieldValue = field.GetValue(component);
 
-            if (fieldValue is float)
+            if (fieldValue is float floatValue)
             {
-                value = (float)fieldValue;
+                value = floatValue;
                 return true;
             }
 
-            if (fieldValue is int)
+            if (fieldValue is int intValue)
             {
-                value = (int)fieldValue;
+                value = intValue;
                 return true;
             }
         }
 
-        PropertyInfo property = type.GetProperty(
-            memberName,
-            BindingFlags.Public | BindingFlags.Instance
-        );
+        PropertyInfo property = type.GetProperty(memberName, BindingFlags.Public | BindingFlags.Instance);
 
         if (property != null)
         {
             object propertyValue = property.GetValue(component, null);
 
-            if (propertyValue is float)
+            if (propertyValue is float floatValue)
             {
-                value = (float)propertyValue;
+                value = floatValue;
                 return true;
             }
 
-            if (propertyValue is int)
+            if (propertyValue is int intValue)
             {
-                value = (int)propertyValue;
+                value = intValue;
                 return true;
             }
         }
@@ -296,50 +325,37 @@ public class PressurePlatePuzzle : MonoBehaviour
         return false;
     }
 
-    void ApplyPuzzleState(bool pressed)
+    void ApplyDoorState(bool pressed)
     {
-        // マテリアル更新
         UpdateButtonMaterial(pressed);
+
+        if (debugLog)
+            Debug.Log(pressed ? "重量条件達成 → ドア開放" : "重量不足 → ドア閉鎖");
 
         RoomPuzzleTarget target = GetComponent<RoomPuzzleTarget>();
 
-        if (pressed)
-        {
-            if (debugLog)
-                Debug.Log("重量条件達成 → パズルクリア");
+        if (target == null)
+            target = GetComponentInParent<RoomPuzzleTarget>();
 
-            if (target != null)
-                target.ClearTargetRoom();
-            else if (RoomRuntimeManager.Instance != null)
-                RoomRuntimeManager.Instance.ClearCurrentRoomPuzzle();
-
-            return;
-        }
-
-        if (!resetWhenWeightRemoved && !holdToKeepOpen)
-            return;
-
-        if (debugLog)
-            Debug.Log("重量不足 → パズル未クリアへ戻す");
+        if (target == null)
+            target = GetComponentInChildren<RoomPuzzleTarget>(true);
 
         if (target != null)
         {
-            target.ResetTargetRoom();
+            target.SetDoorOpen(pressed);
             return;
         }
 
         if (RoomRuntimeManager.Instance != null && RoomRuntimeManager.Instance.currentRoom != null)
-        {
-            RoomRuntimeManager.Instance.currentRoom.ResetPuzzle();
-        }
+            RoomRuntimeManager.Instance.currentRoom.SetDoorOpenCondition(pressed, PuzzleSolveMethod.Weight);
     }
 
-    void UpdateButtonMaterial(bool cleared)
+    void UpdateButtonMaterial(bool pressed)
     {
         if (buttonRenderer == null)
             return;
 
-        if (cleared)
+        if (pressed)
         {
             if (clearedMaterial != null)
                 buttonRenderer.material = clearedMaterial;
@@ -356,16 +372,7 @@ public class PressurePlatePuzzle : MonoBehaviour
         if (plateModel == null)
             return;
 
-        Vector3 targetPos =
-            pressed
-            ? defaultLocalPosition + pressedOffset
-            : defaultLocalPosition;
-
-        plateModel.localPosition =
-            Vector3.Lerp(
-                plateModel.localPosition,
-                targetPos,
-                Time.deltaTime * pressSmooth
-            );
+        Vector3 targetPos = pressed ? defaultLocalPosition + pressedOffset : defaultLocalPosition;
+        plateModel.localPosition = Vector3.Lerp(plateModel.localPosition, targetPos, Time.deltaTime * pressSmooth);
     }
 }

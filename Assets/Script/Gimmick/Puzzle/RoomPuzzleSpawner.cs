@@ -1,6 +1,3 @@
-//部屋内にランダムにパズルを生成する
-
-
 using UnityEngine;
 
 public class RoomPuzzleSpawner : MonoBehaviour
@@ -55,22 +52,17 @@ public class RoomPuzzleSpawner : MonoBehaviour
                 continue;
 
             GameObject prefab = puzzlePrefabs[Random.Range(0, puzzlePrefabs.Length)];
-
-            GameObject obj =
-                Instantiate(
-                    prefab,
-                    point.transform.position,
-                    point.transform.rotation,
-                    transform
-                );
+            GameObject obj = Instantiate(prefab, point.transform.position, point.transform.rotation, transform);
 
             point.spawnedPuzzle = obj;
 
-            // パズル側が特定の部屋を直接参照したい場合用
-            RoomPuzzleTarget target = obj.GetComponent<RoomPuzzleTarget>();
+            RoomPuzzleTarget[] targets = obj.GetComponentsInChildren<RoomPuzzleTarget>(true);
 
-            if (target != null)
-                target.targetRoom = targetRoom;
+            foreach (RoomPuzzleTarget target in targets)
+            {
+                if (target != null)
+                    target.targetRoom = targetRoom;
+            }
 
             spawnedCount++;
 

@@ -1,5 +1,3 @@
-// GoalTrigger：触れたら部屋パズルをクリアするトリガー
-
 using UnityEngine;
 
 public class GoalTrigger : MonoBehaviour
@@ -24,9 +22,15 @@ public class GoalTrigger : MonoBehaviour
 
         RoomPuzzleTarget target = GetComponent<RoomPuzzleTarget>();
 
+        if (target == null)
+            target = GetComponentInParent<RoomPuzzleTarget>();
+
+        if (target == null)
+            target = GetComponentInChildren<RoomPuzzleTarget>(true);
+
         if (target != null)
-            target.ClearTargetRoom();
-        else if (RoomRuntimeManager.Instance != null)
-            RoomRuntimeManager.Instance.ClearCurrentRoomPuzzle();
+            target.SetDoorOpen(true);
+        else if (RoomRuntimeManager.Instance != null && RoomRuntimeManager.Instance.currentRoom != null)
+            RoomRuntimeManager.Instance.currentRoom.SetDoorOpenCondition(true, PuzzleSolveMethod.Normal);
     }
 }

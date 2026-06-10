@@ -1,8 +1,3 @@
-// RoomRuntimeManager：現在プレイヤーがいる部屋を記録する
-//
-// PressurePlateやGoalTriggerなどのパズルは、
-// このCurrentRoomを使って「今いる部屋だけ」をクリアする。
-
 using UnityEngine;
 
 public class RoomRuntimeManager : MonoBehaviour
@@ -28,14 +23,19 @@ public class RoomRuntimeManager : MonoBehaviour
             Debug.Log("現在の部屋: " + room.name);
     }
 
-    public void ClearCurrentRoomPuzzle()
+    public void SetCurrentRoomDoorOpen(bool open, PuzzleSolveMethod method)
     {
         if (currentRoom == null)
         {
-            Debug.LogWarning("CurrentRoomが無いのでパズルクリアできません");
+            Debug.LogWarning("CurrentRoomが無いのでドア状態を変更できません");
             return;
         }
 
-        currentRoom.ClearPuzzle();
+        currentRoom.SetDoorOpenCondition(open, method);
+    }
+
+    public void ClearCurrentRoomPuzzle()
+    {
+        SetCurrentRoomDoorOpen(true, PuzzleSolveMethod.Normal);
     }
 }
