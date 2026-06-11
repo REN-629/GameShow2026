@@ -210,7 +210,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spatialBlend: 1
   minDistance: 1
-  maxDistance: 20
+  maxDistance: 30
   dopplerLevel: 0.5
   rolloffMode: 0
   applyToChildren: 1
