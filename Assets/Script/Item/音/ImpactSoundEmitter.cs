@@ -1,8 +1,3 @@
-// ImpactSoundEmitter：ぶつかった時の音を鳴らす
-//
-// 弱・中・強の3段階で音を分ける。
-// それぞれ複数登録でき、ランダムで鳴る。
-
 using UnityEngine;
 
 public class ImpactSoundEmitter : MonoBehaviour
@@ -31,12 +26,22 @@ public class ImpactSoundEmitter : MonoBehaviour
     [Header("手に持ってる間は鳴らさない")]
     public bool muteWhileHeld = true;
 
+    [Header("常駐AudioSource再生")]
+    public bool useItemSEPlayer = true;
+    public ItemSEPlayer itemSEPlayer;
+
+    [Header("ItemSEPlayerが無い時だけ従来方式")]
+    public bool fallbackToRandomAudioPlayer = true;
+
     private PickupItem pickupItem;
     private float lastPlayTime = -999f;
 
     void Awake()
     {
         pickupItem = GetComponent<PickupItem>();
+
+        if (itemSEPlayer == null)
+            itemSEPlayer = GetComponent<ItemSEPlayer>();
     }
 
     void OnCollisionEnter(Collision collision)
@@ -62,24 +67,48 @@ public class ImpactSoundEmitter : MonoBehaviour
         if (speed < weakSpeed)
             return;
 
-        AudioClip[] clips = weakImpactSEClips;
+        AudioClip[] clips = GetClipsBySpeed(speed);
 
-        if (speed >= strongSpeed)
-        {
-            clips = strongImpactSEClips;
-        }
-        else if (speed >= mediumSpeed)
-        {
-            clips = mediumImpactSEClips;
-        }
+        if (clips == null || clips.Length == 0)
+            return;
 
         Vector3 playPos =
             collision.contactCount > 0
             ? collision.GetContact(0).point
             : transform.position;
 
-        RandomAudioPlayer.PlayRandom(clips, playPos, volume);
+        bool played = false;
 
-        lastPlayTime = Time.time;
+        if (useItemSEPlayer)
+        {
+            if (itemSEPlayer == null)
+                itemSEPlayer = GetComponent<ItemSEPlayer>();
+
+            if (itemSEPlayer != null)
+            {
+                itemSEPlayer.PlayRandom(clips, volume);
+                played = true;
+            }
+        }
+
+        if (!played && fallbackToRandomAudioPlayer)
+        {
+            RandomAudioPlayer.PlayRandom(clips, playPos, volume);
+            played = true;
+        }
+
+        if (played)
+            lastPlayTime = Time.time;
+    }
+
+    AudioClip[] GetClipsBySpeed(float speed)
+    {
+        if (speed >= strongSpeed)
+            return strongImpactSEClips;
+
+        if (speed >= mediumSpeed)
+            return mediumImpactSEClips;
+
+        return weakImpactSEClips;
     }
 }

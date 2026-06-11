@@ -132,6 +132,11 @@ public class HeldItemController : MonoBehaviour
         if (useAnimator != null && useAnimator.IsPlaying)
             return;
 
+        ItemSEPlayer sePlayer = currentHeldItem.GetComponent<ItemSEPlayer>();
+
+        if (sePlayer != null)
+            sePlayer.PlaySwing();
+
         currentHeldItem.Use();
 
         if (useAnimator != null)

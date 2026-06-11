@@ -16,14 +16,18 @@ public class RoomPuzzleSpawner : MonoBehaviour
         spawnPoints = GetComponentsInChildren<RoomPuzzleSpawnPoint>(true);
     }
 
-    public void SpawnPuzzle(GameObject[] puzzlePrefabs, RoomPuzzleState targetRoom)
+    public void SpawnPuzzle(GameObject[] globalPuzzlePrefabs, RoomPuzzleState targetRoom)
     {
         if (!GameModeManager.UsesRandomPuzzles)
             return;
 
-        if (puzzlePrefabs == null || puzzlePrefabs.Length == 0)
+        GameObject[] roomPuzzlePrefabs = GetRoomPuzzlePrefabs(globalPuzzlePrefabs);
+
+        if (roomPuzzlePrefabs == null || roomPuzzlePrefabs.Length == 0)
         {
-            Debug.LogWarning(name + " puzzlePrefabsが空です");
+            if (debugLog)
+                Debug.LogWarning(name + " 生成可能なPuzzleがありません");
+
             return;
         }
 
@@ -54,8 +58,22 @@ public class RoomPuzzleSpawner : MonoBehaviour
             if (point.spawnedPuzzle != null)
                 continue;
 
-            GameObject prefab = puzzlePrefabs[Random.Range(0, puzzlePrefabs.Length)];
-            GameObject obj = Instantiate(prefab, point.transform.position, point.transform.rotation, transform);
+            GameObject[] usablePrefabs = GetSpawnPointPuzzlePrefabs(point, roomPuzzlePrefabs);
+
+            if (usablePrefabs == null || usablePrefabs.Length == 0)
+                continue;
+
+            GameObject prefab = PickRandomPuzzlePrefab(usablePrefabs);
+
+            if (prefab == null)
+                continue;
+
+            GameObject obj = Instantiate(
+                prefab,
+                point.transform.position,
+                point.transform.rotation,
+                transform
+            );
 
             point.spawnedPuzzle = obj;
 
@@ -72,5 +90,37 @@ public class RoomPuzzleSpawner : MonoBehaviour
             if (debugLog)
                 Debug.Log("パズル生成: " + prefab.name);
         }
+    }
+
+    GameObject[] GetRoomPuzzlePrefabs(GameObject[] globalPuzzlePrefabs)
+    {
+        RoomPuzzleSet puzzleSet = GetComponent<RoomPuzzleSet>();
+
+        if (puzzleSet == null)
+            puzzleSet = GetComponentInParent<RoomPuzzleSet>();
+
+        if (puzzleSet == null)
+            return globalPuzzlePrefabs;
+
+        return puzzleSet.GetPuzzlePrefabs(globalPuzzlePrefabs);
+    }
+
+    GameObject[] GetSpawnPointPuzzlePrefabs(RoomPuzzleSpawnPoint point, GameObject[] roomPuzzlePrefabs)
+    {
+        RoomPuzzleSpawnPointFilter filter =
+            point.GetComponent<RoomPuzzleSpawnPointFilter>();
+
+        if (filter == null)
+            return roomPuzzlePrefabs;
+
+        return filter.Filter(roomPuzzlePrefabs);
+    }
+
+    GameObject PickRandomPuzzlePrefab(GameObject[] puzzlePrefabs)
+    {
+        if (puzzlePrefabs == null || puzzlePrefabs.Length == 0)
+            return null;
+
+        return puzzlePrefabs[Random.Range(0, puzzlePrefabs.Length)];
     }
 }

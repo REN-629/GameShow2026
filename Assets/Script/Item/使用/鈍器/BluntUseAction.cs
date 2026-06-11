@@ -15,9 +15,6 @@ public class BluntUseAction : ItemUseAction
 
     public override bool Use(PickupItem item)
     {
-        //バールを振る音は、当たらなくても鳴る
-        PlayUseSE();
-
         if (item == null)
             return false;
 
@@ -41,6 +38,14 @@ public class BluntUseAction : ItemUseAction
             if (target != null)
             {
                 bool damaged = target.DamageByItem(item);
+
+                if (damaged)
+                {
+                    ItemSEPlayer sePlayer = item.GetComponent<ItemSEPlayer>();
+
+                    if (sePlayer != null)
+                        sePlayer.PlayHit();
+                }
 
                 if (debugLog)
                 {

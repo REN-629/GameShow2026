@@ -174,7 +174,12 @@ public class AttributeDurability : MonoBehaviour
 
         durability -= damage;
 
-        RandomAudioPlayer.PlayRandom(hitSEClips, transform.position, hitSEVolume);
+        ItemSEPlayer sePlayer = GetComponent<ItemSEPlayer>();
+
+        if (sePlayer != null)
+            sePlayer.PlayDurabilityDamage();
+        else
+            RandomAudioPlayer.PlayRandom(hitSEClips, transform.position, hitSEVolume);
 
         if (debugLog)
         {
@@ -258,7 +263,12 @@ public class AttributeDurability : MonoBehaviour
 
         Vector3 breakPos = GetBreakEffectPosition();
 
-        RandomAudioPlayer.PlayRandom(breakSEClips, breakPos, breakSEVolume);
+        ItemSEPlayer sePlayer = GetComponent<ItemSEPlayer>();
+
+        if (sePlayer != null)
+            sePlayer.PlayBreak();
+        else
+            RandomAudioPlayer.PlayRandom(breakSEClips, breakPos, breakSEVolume);
 
         if (pickupItem != null)
         {

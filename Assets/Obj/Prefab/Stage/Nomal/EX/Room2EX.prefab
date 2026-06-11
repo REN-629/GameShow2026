@@ -780,6 +780,7 @@ GameObject:
   - component: {fileID: 2017390572439294659}
   - component: {fileID: 8045052359005393961}
   - component: {fileID: 6918662449560666123}
+  - component: {fileID: 814038220758450296}
   - component: {fileID: 2000295751651082898}
   m_Layer: 0
   m_Name: Room2EX
@@ -904,6 +905,20 @@ MonoBehaviour:
   roomLevel: 1
   parentRoomLevel: 0
   gridPosition: {x: 0, y: 0}
+--- !u!114 &814038220758450296
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3899988545844213169}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 967b2af16d49ba94eb832f00dd70ef02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  allowedPuzzlePrefabs: []
+  useGlobalListIfEmpty: 1
 --- !u!65 &2000295751651082898
 BoxCollider:
   m_ObjectHideFlags: 0
