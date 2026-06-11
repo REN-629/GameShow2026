@@ -18,6 +18,9 @@ public class RoomPuzzleSpawner : MonoBehaviour
 
     public void SpawnPuzzle(GameObject[] puzzlePrefabs, RoomPuzzleState targetRoom)
     {
+        if (!GameModeManager.UsesRandomPuzzles)
+            return;
+
         if (puzzlePrefabs == null || puzzlePrefabs.Length == 0)
         {
             Debug.LogWarning(name + " puzzlePrefabsが空です");

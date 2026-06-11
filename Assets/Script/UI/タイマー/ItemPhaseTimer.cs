@@ -12,6 +12,9 @@ public class ItemPhaseTimer : GamePhaseTimer
 
     protected override void TimeOut()
     {
+        if (!GameModeManager.UsesItemPhase)
+            return;
+
         if (controller != null)
             controller.EndItemPhase();
         else if (ItemPhaseController.Instance != null)

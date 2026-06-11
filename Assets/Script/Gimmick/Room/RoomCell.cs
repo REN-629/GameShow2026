@@ -1,5 +1,3 @@
-//1部屋＝セル
-//1部屋ごとのルール・判定
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -50,40 +48,7 @@ public class RoomCell : MonoBehaviour
             return;
 
         UpdateCurrentRoom();
-
-        RoomIdentity identity = GetComponent<RoomIdentity>();
-
-        bool scoreAdded = false;
-
-        if (identity != null)
-        {
-            if (RunScoreManager.Instance != null)
-            {
-                scoreAdded = RunScoreManager.Instance.RegisterRoomReached(identity);
-            }
-            else
-            {
-                Debug.LogWarning("RunScoreManager がありません");
-            }
-
-            // スコアが実際に加算された時だけ、時間加算と+1表示を行う
-            if (scoreAdded)
-            {
-                if (RoomRunTimer.RunInstance != null)
-                {
-                    RoomRunTimer.RunInstance.OnRoomLevelReached(identity);
-                }
-
-                if (ScoreDeltaNotifier.Instance != null)
-                {
-                    ScoreDeltaNotifier.Instance.AddScoreDelta(1);
-                }
-            }
-        }
-        else
-        {
-            Debug.LogWarning(name + " に RoomIdentity がありません");
-        }
+        RegisterRoomProgress();
 
         if (hasPlayerEntered && generateOnlyOnce)
         {
@@ -96,6 +61,9 @@ public class RoomCell : MonoBehaviour
         hasPlayerEntered = true;
 
         if (generateOnlyOnce && hasGeneratedAround)
+            return;
+
+        if (!GameModeManager.UsesRoomGeneration)
             return;
 
         if (generator == null)
@@ -112,14 +80,42 @@ public class RoomCell : MonoBehaviour
         generator.GenerateAround(this);
     }
 
+    void RegisterRoomProgress()
+    {
+        if (!GameModeManager.RecordsRoomProgress)
+            return;
+
+        RoomIdentity identity = GetComponent<RoomIdentity>();
+
+        if (identity == null)
+        {
+            if (debugLog)
+                Debug.LogWarning(name + " に RoomIdentity がありません");
+
+            return;
+        }
+
+        bool scoreAdded = false;
+
+        if (RunScoreManager.Instance != null)
+            scoreAdded = RunScoreManager.Instance.RegisterRoomReached(identity);
+
+        if (!scoreAdded)
+            return;
+
+        if (RoomRunTimer.RunInstance != null && GameModeManager.UsesTimers)
+            RoomRunTimer.RunInstance.OnRoomLevelReached(identity);
+
+        if (ScoreDeltaNotifier.Instance != null)
+            ScoreDeltaNotifier.Instance.AddScoreDelta(1);
+    }
+
     void UpdateCurrentRoom()
     {
         RoomPuzzleState puzzleState = GetComponent<RoomPuzzleState>();
 
         if (puzzleState != null && RoomRuntimeManager.Instance != null)
-        {
             RoomRuntimeManager.Instance.SetCurrentRoom(puzzleState);
-        }
     }
 
     public RoomExitPatternGroup GetExitGroup(RoomDirection direction)

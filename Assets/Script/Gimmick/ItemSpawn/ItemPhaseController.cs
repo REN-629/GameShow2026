@@ -60,6 +60,18 @@ public class ItemPhaseController : MonoBehaviour
 
     void Start()
     {
+        if (!GameModeManager.UsesItemPhase)
+        {
+            if (itemPhaseTimer != null)
+                itemPhaseTimer.StopTimer();
+
+            if (roomRunTimer != null && GameModeManager.UsesTimers)
+                roomRunTimer.StartTimer();
+
+            enabled = false;
+            return;
+        }
+
         if (roomRunTimer != null && roomTimerStartsStopped)
         {
             roomRunTimer.StopTimer();

@@ -54,11 +54,18 @@ public class GamePhaseTimer : MonoBehaviour
     protected virtual void Start()
     {
         currentTime = startTime;
+
+        if (!GameModeManager.UsesTimers)
+            timerRunning = false;
+
         UpdateUI();
     }
 
     protected virtual void Update()
     {
+        if (!GameModeManager.UsesTimers)
+            return;
+
         if (!timerRunning || timedOut)
             return;
 
@@ -77,6 +84,9 @@ public class GamePhaseTimer : MonoBehaviour
 
     public virtual void AddTime(float amount)
     {
+        if (!GameModeManager.UsesTimers)
+            return;
+
         if (timedOut)
             return;
 

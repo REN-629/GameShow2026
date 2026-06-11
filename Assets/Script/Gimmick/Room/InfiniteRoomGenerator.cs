@@ -75,6 +75,12 @@ public class InfiniteRoomGenerator : MonoBehaviour
 
     void Start()
     {
+        if (!GameModeManager.UsesRoomGeneration)
+        {
+            enabled = false;
+            return;
+        }
+
         if (generatedRoomsRoot == null)
         {
             GameObject root = new GameObject("GeneratedRooms");
@@ -514,7 +520,8 @@ public class InfiniteRoomGenerator : MonoBehaviour
         RoomPuzzleState puzzleState =
             room.GetComponent<RoomPuzzleState>();
 
-        spawner.SpawnPuzzle(puzzlePrefabs, puzzleState);
+        if (GameModeManager.UsesRandomPuzzles)
+            spawner.SpawnPuzzle(puzzlePrefabs, puzzleState);
     }
 
     public void RefreshRoomDoors(RoomCell room)

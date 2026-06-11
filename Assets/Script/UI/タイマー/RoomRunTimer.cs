@@ -45,6 +45,9 @@ public class RoomRunTimer : GamePhaseTimer
 
     public void OnRoomLevelReached(RoomIdentity identity)
     {
+        if (!GameModeManager.UsesTimers)
+            return;
+
         if (identity == null)
             return;
 

@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 867733014483646480}
   - component: {fileID: 2422293058892803731}
   - component: {fileID: 7666409500565636164}
+  - component: {fileID: 1132630518758128724}
   - component: {fileID: 6852014418974957701}
   m_Layer: 0
   m_Name: "\u30D0\u30FC\u30EB"
@@ -94,9 +95,15 @@ MonoBehaviour:
   materialAttributes: 02000000
   weakEffectAttributes: 030000000200000001000000
   useMaterialDamage: 1
-  hitSEClips: []
-  hitSEVolume: 1
-  breakSEClips: []
+  hitSEClips:
+  - {fileID: 8300000, guid: 1ce059e2156877e4885c7ddd277bd0c5, type: 3}
+  - {fileID: 8300000, guid: dce86142cc84c2d45877af220e78316a, type: 3}
+  - {fileID: 8300000, guid: fd1c146539834bc43b68cfda7ab5f8e3, type: 3}
+  hitSEVolume: 0.5
+  breakSEClips:
+  - {fileID: 8300000, guid: ccc56e1e8e89ae248a6b637489b2a38d, type: 3}
+  - {fileID: 8300000, guid: 5bfc3bedf9bf2aa468e96531f48669e2, type: 3}
+  - {fileID: 8300000, guid: 1058331d6978ff94f8bdae25b8adf720, type: 3}
   breakSEVolume: 1
   useFractureThis: 1
   usePrefabEffectIfNoFracture: 1
@@ -117,8 +124,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 368ff307ae6cd0d46946fdf393d62204, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  useSEClips: []
-  useSEVolume: 1
+  useSEClips:
+  - {fileID: 8300000, guid: a9cef71a377f8ec4d933540e2eebf835, type: 3}
+  - {fileID: 8300000, guid: df1c5b5cfea68974fbae77a13f62aaad, type: 3}
+  - {fileID: 8300000, guid: e7e348ead854d4448ac6559475b19d00, type: 3}
+  useSEVolume: 0.5
   playerCamera: {fileID: 0}
   hitDistance: 2
   hitRadius: 0.35
@@ -152,14 +162,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e5b309b72b563aa43ad1c2ea83b62cab, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  weakImpactSEClips: []
-  mediumImpactSEClips: []
-  strongImpactSEClips: []
+  weakImpactSEClips:
+  - {fileID: 8300000, guid: 6bd39b9d4c530cf48bb2e921c9fd3701, type: 3}
+  - {fileID: 8300000, guid: d46b5ef8717af874eba39e5381ce708b, type: 3}
+  - {fileID: 8300000, guid: 55802863d85247c4f8d45099d77edd40, type: 3}
+  mediumImpactSEClips:
+  - {fileID: 8300000, guid: d9b5efbbdd62e564583a24a14ff2bbf2, type: 3}
+  - {fileID: 8300000, guid: 023e460194b61ae46853832111c2051a, type: 3}
+  - {fileID: 8300000, guid: 7389cedb014a653458582271502f6f1d, type: 3}
+  strongImpactSEClips:
+  - {fileID: 8300000, guid: 42086aebd27351f4786188b832ff3567, type: 3}
+  - {fileID: 8300000, guid: e6fc612b190824d4ba10794f03a001db, type: 3}
+  - {fileID: 8300000, guid: ec8be49711cca574caee621c022b34ed, type: 3}
   volume: 1
   weakSpeed: 0.3
   mediumSpeed: 3
   strongSpeed: 7
-  soundCooldown: 0.12
+  soundCooldown: 0.5
   muteWhileHeld: 1
 --- !u!114 &7666409500565636164
 MonoBehaviour:
@@ -177,6 +196,24 @@ MonoBehaviour:
   - {fileID: 9128524044428608581}
   autoFindRenderersIfEmpty: 1
   skipObjectsWithCollider: 1
+--- !u!114 &1132630518758128724
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2101194796500896743}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a05f9b3e1eda7b488ff36eed6b8b54c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spatialBlend: 1
+  minDistance: 1
+  maxDistance: 20
+  dopplerLevel: 0.5
+  rolloffMode: 0
+  applyToChildren: 1
 --- !u!54 &6852014418974957701
 Rigidbody:
   m_ObjectHideFlags: 0

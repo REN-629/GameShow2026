@@ -156,6 +156,7 @@ GameObject:
   - component: {fileID: 2926353324352483695}
   - component: {fileID: 8240344081608792068}
   - component: {fileID: 8644794975023897646}
+  - component: {fileID: 5844350203139656862}
   - component: {fileID: 4100811182647183152}
   m_Layer: 0
   m_Name: "\u30E9\u30A4\u30BF\u30FC"
@@ -334,6 +335,24 @@ MonoBehaviour:
   - {fileID: 2977025776132116211}
   autoFindRenderersIfEmpty: 1
   skipObjectsWithCollider: 1
+--- !u!114 &5844350203139656862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3284804060422445093}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a05f9b3e1eda7b488ff36eed6b8b54c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spatialBlend: 1
+  minDistance: 1
+  maxDistance: 20
+  dopplerLevel: 0.5
+  rolloffMode: 0
+  applyToChildren: 1
 --- !u!54 &4100811182647183152
 Rigidbody:
   m_ObjectHideFlags: 0
