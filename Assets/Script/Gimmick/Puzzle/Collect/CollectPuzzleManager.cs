@@ -2,30 +2,22 @@ using UnityEngine;
 
 public class CollectPuzzleManager : MonoBehaviour
 {
-    [Header("生成")]
     public GameObject fragmentPrefab;
 
-    [Header("個数")]
     public int minCount = 3;
     public int maxCount = 7;
 
-    [Header("ドア")]
     public RoomPuzzleTarget puzzleTarget;
 
-    [Header("UI")]
-    public bool showUIOnPlayerEnter = true;
-
-    [Header("取得SE")]
     public AudioClip[] collectSEClips;
+
     [Range(0f, 1f)]
     public float collectSEVolume = 1f;
-
-    [Header("デバッグ")]
-    public bool debugLog = true;
 
     private int targetCount;
     private int currentCount;
     private bool completed;
+    private bool generated;
 
     void Start()
     {
@@ -34,51 +26,38 @@ public class CollectPuzzleManager : MonoBehaviour
 
     public void GenerateFragments()
     {
-        CollectSpawnArea[] areas =
-            GetComponentsInChildren<CollectSpawnArea>(true);
+        if (generated)
+            return;
+
+        CollectSpawnArea[] areas = GetComponentsInChildren<CollectSpawnArea>(true);
 
         if (areas == null || areas.Length == 0)
-        {
-            Debug.LogWarning(name + " CollectSpawnArea がありません");
             return;
-        }
 
         if (fragmentPrefab == null)
-        {
-            Debug.LogWarning(name + " FragmentPrefab がありません");
             return;
-        }
 
         targetCount = Random.Range(minCount, maxCount + 1);
         currentCount = 0;
         completed = false;
+        generated = true;
 
         for (int i = 0; i < targetCount; i++)
         {
-            CollectSpawnArea area =
-                areas[Random.Range(0, areas.Length)];
+            CollectSpawnArea area = areas[Random.Range(0, areas.Length)];
 
-            GameObject obj = Instantiate(
-                fragmentPrefab,
-                area.GetRandomPosition(),
-                Quaternion.identity,
-                transform
-            );
+            GameObject obj = Instantiate(fragmentPrefab, area.GetRandomPosition(), Quaternion.identity, transform);
 
-            CollectFragment fragment =
-                obj.GetComponent<CollectFragment>();
+            CollectFragment fragment = obj.GetComponent<CollectFragment>();
 
             if (fragment != null)
                 fragment.manager = this;
         }
-
-        if (debugLog)
-            Debug.Log(name + " 欠片生成: " + targetCount);
     }
 
     public void BindUI()
     {
-        if (!showUIOnPlayerEnter)
+        if (completed)
             return;
 
         if (CollectPuzzleImageUI.Instance != null)
@@ -98,19 +77,17 @@ public class CollectPuzzleManager : MonoBehaviour
 
         currentCount++;
 
-        PlayCollectSE(fragment != null ? fragment.transform.position : transform.position);
+        if (collectSEClips != null && collectSEClips.Length > 0)
+            RandomAudioPlayer.PlayRandom(collectSEClips, transform.position, collectSEVolume);
 
         if (CollectPuzzleImageUI.Instance != null)
             CollectPuzzleImageUI.Instance.Refresh(this);
-
-        if (debugLog)
-            Debug.Log(name + " 欠片取得: " + currentCount + " / " + targetCount);
 
         if (currentCount >= targetCount)
             CompletePuzzle();
     }
 
-    void CompletePuzzle()
+    public void CompletePuzzle()
     {
         if (completed)
             return;
@@ -124,18 +101,13 @@ public class CollectPuzzleManager : MonoBehaviour
         }
 
         if (CollectPuzzleImageUI.Instance != null)
-            CollectPuzzleImageUI.Instance.Refresh(this);
-
-        if (debugLog)
-            Debug.Log(name + " 欠片Puzzleクリア");
+            CollectPuzzleImageUI.Instance.ForceHide(this);
     }
 
-    void PlayCollectSE(Vector3 position)
+    public void AbandonPuzzle()
     {
-        if (collectSEClips == null || collectSEClips.Length == 0)
-            return;
-
-        RandomAudioPlayer.PlayRandom(collectSEClips, position, collectSEVolume);
+        if (CollectPuzzleImageUI.Instance != null)
+            CollectPuzzleImageUI.Instance.ForceHide(this);
     }
 
     public int GetCurrentCount()

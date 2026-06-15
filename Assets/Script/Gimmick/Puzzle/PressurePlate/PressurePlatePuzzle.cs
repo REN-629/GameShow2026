@@ -252,6 +252,13 @@ public class PressurePlatePuzzle : MonoBehaviour
                 return rb.mass;
         }
 
+        //プレイヤーの重さも使えるように
+        PlayerWeightProxy player =
+    obj.GetComponent<PlayerWeightProxy>();
+
+        if (player != null)
+            return player.GetWeight();
+
         return 0f;
     }
 

@@ -1,43 +1,41 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class CollectPuzzleImageUI : MonoBehaviour
 {
     public static CollectPuzzleImageUI Instance { get; private set; }
 
-    [Header("Root")]
-    public GameObject root;
-
-    [Header("アイコン配置親")]
+    public RectTransform root;
     public Transform iconParent;
-
-    [Header("アイコンPrefab")]
     public CollectPuzzleIconUI iconPrefab;
 
-    [Header("表示設定")]
-    public bool hideWhenUnbound = true;
+    public Vector2 shownPosition = new Vector2(0f, 120f);
+    public Vector2 hiddenPosition = new Vector2(0f, -120f);
+    public float moveDuration = 0.25f;
+    public AnimationCurve moveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     private CollectPuzzleManager currentPuzzle;
-    private readonly List<CollectPuzzleIconUI> icons =
-        new List<CollectPuzzleIconUI>();
+    private readonly List<CollectPuzzleIconUI> icons = new List<CollectPuzzleIconUI>();
+    private Coroutine moveRoutine;
 
     void Awake()
     {
         Instance = this;
-        Hide();
+
+        if (root != null)
+            root.anchoredPosition = hiddenPosition;
     }
 
     public void Bind(CollectPuzzleManager puzzle)
     {
-        if (puzzle == null)
+        if (puzzle == null || puzzle.IsCompleted())
             return;
 
         currentPuzzle = puzzle;
-
         BuildIcons(puzzle.GetTargetCount());
         Refresh(puzzle);
-        Show();
+        MoveTo(shownPosition);
     }
 
     public void Unbind(CollectPuzzleManager puzzle)
@@ -46,9 +44,16 @@ public class CollectPuzzleImageUI : MonoBehaviour
             return;
 
         currentPuzzle = null;
+        MoveTo(hiddenPosition);
+    }
 
-        if (hideWhenUnbound)
-            Hide();
+    public void ForceHide(CollectPuzzleManager puzzle)
+    {
+        if (currentPuzzle != puzzle)
+            return;
+
+        currentPuzzle = null;
+        MoveTo(hiddenPosition);
     }
 
     public void Refresh(CollectPuzzleManager puzzle)
@@ -64,11 +69,12 @@ public class CollectPuzzleImageUI : MonoBehaviour
 
         for (int i = 0; i < icons.Count; i++)
         {
-            bool collected = i < current;
-
             if (icons[i] != null)
-                icons[i].SetCollected(collected);
+                icons[i].SetCollected(i < current);
         }
+
+        if (puzzle.IsCompleted())
+            ForceHide(puzzle);
     }
 
     void BuildIcons(int count)
@@ -80,9 +86,7 @@ public class CollectPuzzleImageUI : MonoBehaviour
 
         for (int i = 0; i < count; i++)
         {
-            CollectPuzzleIconUI icon =
-                Instantiate(iconPrefab, iconParent);
-
+            CollectPuzzleIconUI icon = Instantiate(iconPrefab, iconParent);
             icon.SetCollected(false);
             icons.Add(icon);
         }
@@ -99,15 +103,32 @@ public class CollectPuzzleImageUI : MonoBehaviour
         icons.Clear();
     }
 
-    public void Show()
+    void MoveTo(Vector2 target)
     {
-        if (root != null)
-            root.SetActive(true);
+        if (root == null)
+            return;
+
+        if (moveRoutine != null)
+            StopCoroutine(moveRoutine);
+
+        moveRoutine = StartCoroutine(MoveRoutine(target));
     }
 
-    public void Hide()
+    IEnumerator MoveRoutine(Vector2 target)
     {
-        if (root != null)
-            root.SetActive(false);
+        Vector2 start = root.anchoredPosition;
+        float timer = 0f;
+
+        while (timer < moveDuration)
+        {
+            timer += Time.deltaTime;
+            float t = Mathf.Clamp01(timer / moveDuration);
+            float e = moveCurve != null ? moveCurve.Evaluate(t) : t;
+            root.anchoredPosition = Vector2.LerpUnclamped(start, target, e);
+            yield return null;
+        }
+
+        root.anchoredPosition = target;
+        moveRoutine = null;
     }
 }

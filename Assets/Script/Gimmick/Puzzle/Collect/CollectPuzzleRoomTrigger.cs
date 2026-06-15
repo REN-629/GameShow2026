@@ -40,6 +40,6 @@ public class CollectPuzzleRoomTrigger : MonoBehaviour
             return;
 
         if (puzzle != null)
-            puzzle.UnbindUI();
+            puzzle.AbandonPuzzle();
     }
 }

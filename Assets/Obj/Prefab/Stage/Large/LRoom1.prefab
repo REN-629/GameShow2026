@@ -555,10 +555,12 @@ Transform:
   - {fileID: 1184810405680901127}
   - {fileID: 2410380161909263614}
   - {fileID: 7760691141464949280}
-  - {fileID: 1493007930626355714}
   - {fileID: 7171973998593456558}
   - {fileID: 5856656678707772625}
   - {fileID: 1494790265542135093}
+  - {fileID: 1493007930626355714}
+  - {fileID: 1648051438352632610}
+  - {fileID: 4229694601199032534}
   - {fileID: 2678121326453505921}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -690,6 +692,53 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 56, y: 60, z: 56}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &4381851867412670610
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4229694601199032534}
+  - component: {fileID: 3741196359879794579}
+  m_Layer: 0
+  m_Name: HardshipSpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4229694601199032534
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4381851867412670610}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7362595654860811807}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3741196359879794579
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4381851867412670610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d869366cc75636c46893da9b323f8e8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  canSpawn: 1
+  spawnChance: 0.5
+  spawnedObject: {fileID: 8600794761508818532}
 --- !u!1 &5153333574467591964
 GameObject:
   m_ObjectHideFlags: 0
@@ -3732,6 +3781,57 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!1 &8600794761508818532
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1648051438352632610}
+  - component: {fileID: 4365273631304977893}
+  m_Layer: 0
+  m_Name: HardshipSpawn
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1648051438352632610
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8600794761508818532}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 7362595654860811807}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4365273631304977893
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8600794761508818532}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a515582eda276c4cb9ed7c0f68240bc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  hardshipPrefabs:
+  - {fileID: 6284508268181745307, guid: 8d7826f7af75beb4da25acd2fc00d945, type: 3}
+  spawnPoints:
+  - {fileID: 3741196359879794579}
+  maxSpawnCount: 1
+  spawnOnStart: 0
+  debugLog: 1
 --- !u!1 &8897743972082307614
 GameObject:
   m_ObjectHideFlags: 0
