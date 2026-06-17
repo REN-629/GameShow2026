@@ -3830,7 +3830,7 @@ MonoBehaviour:
   spawnPoints:
   - {fileID: 3741196359879794579}
   maxSpawnCount: 1
-  spawnOnStart: 0
+  spawnOnStart: 1
   debugLog: 1
 --- !u!1 &8897743972082307614
 GameObject:
