@@ -14,6 +14,12 @@ public class TimeDeltaReasonNotifier : MonoBehaviour
     public void AddTimeDelta(string reason, float amount)
     {
         if (timePopup != null)
+        {
             timePopup.SetReasonDelta(reason, amount);
+        }
+        else
+        {
+            Debug.LogWarning("TimeDeltaReasonNotifier: timePopup が未設定");
+        }
     }
 }

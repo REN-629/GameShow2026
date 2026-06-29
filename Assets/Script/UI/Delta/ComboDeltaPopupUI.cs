@@ -4,17 +4,24 @@ using TMPro;
 
 public class ComboDeltaPopupUI : MonoBehaviour
 {
+    [Header("Root")]
     public GameObject root;
+
+    [Header("Text")]
     public TextMeshProUGUI deltaTMP;
     public Text deltaText;
+
+    [Header("メーター")]
     public Image comboFillImage;
 
+    [Header("表示時間")]
     public float showDuration = 5f;
     public float blinkStartTime = 1f;
     public float blinkInterval = 0.12f;
 
+    [Header("表示形式")]
     public string plusPrefix = "+";
-    public string minusPrefix = "";
+    public string minusPrefix = "-";
     public string suffix = "";
 
     private int comboValue = 0;
@@ -34,7 +41,7 @@ public class ComboDeltaPopupUI : MonoBehaviour
         timer -= Time.deltaTime;
 
         if (comboFillImage != null)
-            comboFillImage.fillAmount = Mathf.Clamp01(timer / showDuration);
+            comboFillImage.fillAmount = showDuration > 0f ? Mathf.Clamp01(timer / showDuration) : 0f;
 
         if (timer <= blinkStartTime)
         {
@@ -69,9 +76,14 @@ public class ComboDeltaPopupUI : MonoBehaviour
         timer = showDuration;
 
         string sign = amount >= 0f ? plusPrefix : minusPrefix;
-        string value = reason + ":" + sign + Mathf.Abs(amount).ToString("0") + suffix;
+        string value = reason + sign + Mathf.Abs(amount).ToString("0") + suffix;
 
         SetText(value);
+    }
+
+    public void SetReasonDelta(float amount, string reason)
+    {
+        SetReasonDelta(reason, amount);
     }
 
     void Show()

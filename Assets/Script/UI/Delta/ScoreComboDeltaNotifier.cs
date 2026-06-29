@@ -14,6 +14,12 @@ public class ScoreComboDeltaNotifier : MonoBehaviour
     public void AddScoreDelta(int amount)
     {
         if (scorePopup != null)
+        {
             scorePopup.AddDelta(amount);
+        }
+        else
+        {
+            Debug.LogWarning("ScoreComboDeltaNotifier: scorePopup が未設定");
+        }
     }
 }

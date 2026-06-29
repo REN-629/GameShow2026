@@ -101,20 +101,13 @@ public class RoomCell : MonoBehaviour
             scoreAdded = RunScoreManager.Instance.RegisterRoomReached(identity);
 
         if (!scoreAdded)
-        {
-            if (ScoreComboDeltaNotifier.Instance != null)
-            {
-                ScoreComboDeltaNotifier.Instance.AddScoreDelta(1);
-            }
-
             return;
-        }
 
         if (RoomRunTimer.RunInstance != null && GameModeManager.UsesTimers)
             RoomRunTimer.RunInstance.OnRoomLevelReached(identity);
 
-        if (ScoreDeltaNotifier.Instance != null)
-            ScoreDeltaNotifier.Instance.AddScoreDelta(1);
+        if (ScoreComboDeltaNotifier.Instance != null)
+            ScoreComboDeltaNotifier.Instance.AddScoreDelta(1);
     }
 
     void UpdateCurrentRoom()

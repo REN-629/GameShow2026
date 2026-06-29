@@ -84,6 +84,11 @@ public class GamePhaseTimer : MonoBehaviour
 
     public virtual void AddTime(float amount)
     {
+        AddTime(amount, "");
+    }
+
+    public virtual void AddTime(float amount, string reason)
+    {
         if (!GameModeManager.UsesTimers)
             return;
 
@@ -92,7 +97,12 @@ public class GamePhaseTimer : MonoBehaviour
 
         currentTime += amount;
 
-        if (deltaPopup != null && Mathf.Abs(amount) > 0.01f)
+        if (!string.IsNullOrEmpty(reason))
+        {
+            if (TimeDeltaReasonNotifier.Instance != null && Mathf.Abs(amount) > 0.01f)
+                TimeDeltaReasonNotifier.Instance.AddTimeDelta(reason, amount);
+        }
+        else if (deltaPopup != null && Mathf.Abs(amount) > 0.01f)
         {
             deltaPopup.AddDelta(amount);
         }
@@ -104,6 +114,16 @@ public class GamePhaseTimer : MonoBehaviour
 
         if (currentTime <= 0f)
             TimeOut();
+    }
+
+    public virtual void RemoveTime(float amount)
+    {
+        RemoveTime(amount, "");
+    }
+
+    public virtual void RemoveTime(float amount, string reason)
+    {
+        AddTime(-Mathf.Abs(amount), reason);
     }
 
     public void StopTimer()

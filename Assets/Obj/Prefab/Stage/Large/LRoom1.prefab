@@ -737,8 +737,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   canSpawn: 1
-  spawnChance: 0.5
-  spawnedObject: {fileID: 8600794761508818532}
+  spawnChance: 1
+  spawnedObject: {fileID: 0}
 --- !u!1 &5153333574467591964
 GameObject:
   m_ObjectHideFlags: 0
@@ -3825,8 +3825,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0a515582eda276c4cb9ed7c0f68240bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hardshipPrefabs:
-  - {fileID: 6284508268181745307, guid: 8d7826f7af75beb4da25acd2fc00d945, type: 3}
+  hardshipPrefabs: []
   spawnPoints:
   - {fileID: 3741196359879794579}
   maxSpawnCount: 1

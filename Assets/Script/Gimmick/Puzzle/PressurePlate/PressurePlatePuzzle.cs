@@ -124,6 +124,11 @@ public class PressurePlatePuzzle : MonoBehaviour
         if (!obj.activeInHierarchy)
             return false;
 
+        CarryWeightBlock block = obj.GetComponent<CarryWeightBlock>();
+
+        if (block != null && block.isHeld)
+            return false;
+
         PickupItem item = obj.GetComponent<PickupItem>();
 
         if (item != null && item.CurrentState != PickupItemState.World)
@@ -190,6 +195,11 @@ public class PressurePlatePuzzle : MonoBehaviour
         if (other.CompareTag("Player"))
             return other.gameObject;
 
+        CarryWeightBlock carryBlock = other.GetComponentInParent<CarryWeightBlock>();
+
+        if (carryBlock != null)
+            return carryBlock.gameObject;
+
         PickupItem pickupItem = other.GetComponentInParent<PickupItem>();
 
         if (pickupItem != null)
@@ -228,8 +238,25 @@ public class PressurePlatePuzzle : MonoBehaviour
         if (obj == null)
             return 0f;
 
+        PlayerWeightProxy player =
+            obj.GetComponent<PlayerWeightProxy>();
+
+        if (player != null)
+            return player.GetWeight();
+
         if (obj.CompareTag("Player"))
             return playerWeight;
+
+        CarryWeightBlock block = obj.GetComponent<CarryWeightBlock>();
+
+        if (block != null)
+            return block.GetWeight();
+
+        PressureWeightSource pressureWeight =
+            obj.GetComponent<PressureWeightSource>();
+
+        if (pressureWeight != null)
+            return pressureWeight.GetWeight();
 
         PickupItem pickupItem = obj.GetComponent<PickupItem>();
 
@@ -251,14 +278,6 @@ public class PressurePlatePuzzle : MonoBehaviour
             if (rb != null)
                 return rb.mass;
         }
-
-        //プレイヤーの重さも使えるように
-        PlayerWeightProxy player =
-    obj.GetComponent<PlayerWeightProxy>();
-
-        if (player != null)
-            return player.GetWeight();
-
         return 0f;
     }
 
