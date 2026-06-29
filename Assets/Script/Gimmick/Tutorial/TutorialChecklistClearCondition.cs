@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class TutorialChecklistClearCondition : MonoBehaviour
 {
-    public TutorialPuzzleDoorOpener doorOpener;
+    public RoomPuzzleTarget puzzleTarget;
 
     public bool requireMove;
     public bool requireJump;
@@ -34,19 +34,16 @@ public class TutorialChecklistClearCondition : MonoBehaviour
 
     void Awake()
     {
-        if (doorOpener == null)
-            doorOpener = GetComponent<TutorialPuzzleDoorOpener>();
+        if (puzzleTarget == null)
+            puzzleTarget = GetComponent<RoomPuzzleTarget>();
 
-        if (doorOpener == null)
-            doorOpener = GetComponentInParent<TutorialPuzzleDoorOpener>();
+        if (puzzleTarget == null)
+            puzzleTarget = GetComponentInParent<RoomPuzzleTarget>();
     }
 
     void Update()
     {
-        if (cleared)
-            return;
-
-        if (!activeInRoom)
+        if (cleared || !activeInRoom)
             return;
 
         if (detectInput)
@@ -130,20 +127,11 @@ public class TutorialChecklistClearCondition : MonoBehaviour
 
     void CheckClear()
     {
-        if (requireMove && !moved)
-            return;
-
-        if (requireJump && !jumped)
-            return;
-
-        if (requireItemPickup && !pickedUp)
-            return;
-
-        if (requireThrow && !thrown)
-            return;
-
-        if (requireUse && !used)
-            return;
+        if (requireMove && !moved) return;
+        if (requireJump && !jumped) return;
+        if (requireItemPickup && !pickedUp) return;
+        if (requireThrow && !thrown) return;
+        if (requireUse && !used) return;
 
         Clear();
     }
@@ -159,8 +147,8 @@ public class TutorialChecklistClearCondition : MonoBehaviour
         if (TutorialChecklistUI.Instance != null)
             TutorialChecklistUI.Instance.ForceHide(this);
 
-        if (doorOpener != null)
-            doorOpener.Clear();
+        if (puzzleTarget != null)
+            puzzleTarget.SetDoorOpen(true);
     }
 
     public bool IsCleared()
@@ -181,20 +169,11 @@ public class TutorialChecklistClearCondition : MonoBehaviour
     {
         string text = "";
 
-        if (requireMove)
-            text += Line(moved, moveLabel);
-
-        if (requireJump)
-            text += Line(jumped, jumpLabel);
-
-        if (requireItemPickup)
-            text += Line(pickedUp, pickupLabel);
-
-        if (requireThrow)
-            text += Line(thrown, throwLabel);
-
-        if (requireUse)
-            text += Line(used, useLabel);
+        if (requireMove) text += Line(moved, moveLabel);
+        if (requireJump) text += Line(jumped, jumpLabel);
+        if (requireItemPickup) text += Line(pickedUp, pickupLabel);
+        if (requireThrow) text += Line(thrown, throwLabel);
+        if (requireUse) text += Line(used, useLabel);
 
         return text;
     }

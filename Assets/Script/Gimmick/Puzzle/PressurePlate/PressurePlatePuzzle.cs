@@ -129,6 +129,11 @@ public class PressurePlatePuzzle : MonoBehaviour
         if (block != null && block.isHeld)
             return false;
 
+        CarryObject carryObject = obj.GetComponent<CarryObject>();
+
+        if (carryObject != null && carryObject.isHeld)
+            return false;
+
         PickupItem item = obj.GetComponent<PickupItem>();
 
         if (item != null && item.CurrentState != PickupItemState.World)
@@ -195,6 +200,11 @@ public class PressurePlatePuzzle : MonoBehaviour
         if (other.CompareTag("Player"))
             return other.gameObject;
 
+        CarryObject carryObject = other.GetComponentInParent<CarryObject>();
+
+        if (carryObject != null)
+            return carryObject.gameObject;
+
         CarryWeightBlock carryBlock = other.GetComponentInParent<CarryWeightBlock>();
 
         if (carryBlock != null)
@@ -246,6 +256,9 @@ public class PressurePlatePuzzle : MonoBehaviour
 
         if (obj.CompareTag("Player"))
             return playerWeight;
+
+        if (CarryObjectWeightReader.TryGetWeight(obj, out float carryWeight))
+            return carryWeight;
 
         CarryWeightBlock block = obj.GetComponent<CarryWeightBlock>();
 

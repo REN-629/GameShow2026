@@ -10,19 +10,29 @@ public class TutorialDialogueUI : MonoBehaviour
     public GameObject root;
     public Text messageText;
 
-    [Header("入力")]
+    [Header("手動送り")]
     public KeyCode nextKey = KeyCode.Return;
     public bool clickToNext = true;
+
+    [Header("自動送り")]
+    public bool autoAdvance = true;
+    public float autoAdvanceDelay = 5f;
 
     [Header("タイピング")]
     public float typeInterval = 0.035f;
     public bool useUnscaledTime = false;
 
+    [Header("最後の文章後")]
+    public bool hideAfterLastMessage = true;
+    public float hideDelayAfterLastMessage = 2f;
+
     private string[] currentMessages;
     private int currentIndex;
     private Coroutine typingRoutine;
+    private Coroutine autoAdvanceRoutine;
     private bool isTyping;
     private string fullText;
+    private bool showing;
 
     void Awake()
     {
@@ -32,6 +42,9 @@ public class TutorialDialogueUI : MonoBehaviour
 
     void Update()
     {
+        if (!showing)
+            return;
+
         if (root == null || !root.activeSelf)
             return;
 
@@ -46,6 +59,7 @@ public class TutorialDialogueUI : MonoBehaviour
 
         currentMessages = messages;
         currentIndex = 0;
+        showing = true;
 
         if (root != null)
             root.SetActive(true);
@@ -55,9 +69,13 @@ public class TutorialDialogueUI : MonoBehaviour
 
     public void Next()
     {
+        if (!showing)
+            return;
+
         if (isTyping)
         {
             FinishTyping();
+            RestartAutoAdvance();
             return;
         }
 
@@ -65,7 +83,8 @@ public class TutorialDialogueUI : MonoBehaviour
 
         if (currentMessages == null || currentIndex >= currentMessages.Length)
         {
-            Hide();
+            if (hideAfterLastMessage)
+                Hide();
             return;
         }
 
@@ -74,11 +93,10 @@ public class TutorialDialogueUI : MonoBehaviour
 
     void StartTyping(string text)
     {
-        if (typingRoutine != null)
-            StopCoroutine(typingRoutine);
+        StopTypingRoutine();
+        StopAutoAdvanceRoutine();
 
         fullText = text;
-
         typingRoutine = StartCoroutine(TypeRoutine(text));
     }
 
@@ -102,26 +120,77 @@ public class TutorialDialogueUI : MonoBehaviour
 
         isTyping = false;
         typingRoutine = null;
+
+        RestartAutoAdvance();
     }
 
     void FinishTyping()
     {
-        if (typingRoutine != null)
-            StopCoroutine(typingRoutine);
+        StopTypingRoutine();
 
         if (messageText != null)
             messageText.text = fullText;
 
         isTyping = false;
-        typingRoutine = null;
     }
 
-    public void Hide()
+    void RestartAutoAdvance()
+    {
+        StopAutoAdvanceRoutine();
+
+        if (!autoAdvance)
+            return;
+
+        autoAdvanceRoutine = StartCoroutine(AutoAdvanceRoutine());
+    }
+
+    IEnumerator AutoAdvanceRoutine()
+    {
+        float waitTime = autoAdvanceDelay;
+
+        bool isLast =
+            currentMessages != null &&
+            currentIndex >= currentMessages.Length - 1;
+
+        if (isLast && hideAfterLastMessage)
+            waitTime = hideDelayAfterLastMessage;
+
+        if (useUnscaledTime)
+            yield return new WaitForSecondsRealtime(waitTime);
+        else
+            yield return new WaitForSeconds(waitTime);
+
+        if (!showing)
+            yield break;
+
+        if (isLast && hideAfterLastMessage)
+            Hide();
+        else
+            Next();
+    }
+
+    void StopTypingRoutine()
     {
         if (typingRoutine != null)
             StopCoroutine(typingRoutine);
 
         typingRoutine = null;
+    }
+
+    void StopAutoAdvanceRoutine()
+    {
+        if (autoAdvanceRoutine != null)
+            StopCoroutine(autoAdvanceRoutine);
+
+        autoAdvanceRoutine = null;
+    }
+
+    public void Hide()
+    {
+        StopTypingRoutine();
+        StopAutoAdvanceRoutine();
+
+        showing = false;
         isTyping = false;
 
         if (messageText != null)

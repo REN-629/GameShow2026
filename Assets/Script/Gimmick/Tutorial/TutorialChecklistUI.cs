@@ -30,10 +30,7 @@ public class TutorialChecklistUI : MonoBehaviour
 
     public void Bind(TutorialChecklistClearCondition checklist)
     {
-        if (checklist == null)
-            return;
-
-        if (checklist.IsCleared())
+        if (checklist == null || checklist.IsCleared())
             return;
 
         currentChecklist = checklist;
@@ -43,10 +40,7 @@ public class TutorialChecklistUI : MonoBehaviour
 
     public void Refresh(TutorialChecklistClearCondition checklist)
     {
-        if (currentChecklist != checklist)
-            return;
-
-        if (checklist == null)
+        if (currentChecklist != checklist || checklist == null)
             return;
 
         SetText(checklist.BuildText());

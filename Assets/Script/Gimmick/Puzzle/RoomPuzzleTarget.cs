@@ -5,20 +5,36 @@ public class RoomPuzzleTarget : MonoBehaviour
     [Header("このパズルが操作する部屋")]
     public RoomPuzzleState targetRoom;
 
+    [Header("直接制御するドア")]
+    public DoorController[] directDoors;
+
+    [Header("targetRoomが空ならRoomRuntimeManagerを使う")]
+    public bool useRuntimeCurrentRoomIfTargetMissing = true;
+
     [Header("解法カテゴリ")]
     public PuzzleSolveMethod solveMethod = PuzzleSolveMethod.Normal;
+
+    [Header("デバッグ")]
+    public bool debugLog = true;
 
     public void SetDoorOpen(bool open)
     {
         RoomPuzzleState room = GetTargetRoom();
 
-        if (room == null)
+        if (room != null)
         {
-            Debug.LogWarning(name + " 対象RoomPuzzleStateがありません");
+            room.SetDoorOpenCondition(open, solveMethod);
             return;
         }
 
-        room.SetDoorOpenCondition(open, solveMethod);
+        if (HasDirectDoors())
+        {
+            SetDirectDoors(open);
+            return;
+        }
+
+        if (debugLog)
+            Debug.LogWarning(name + " 対象RoomPuzzleStateまたはDirectDoorsがありません");
     }
 
     public void ClearTargetRoom()
@@ -41,9 +57,38 @@ public class RoomPuzzleTarget : MonoBehaviour
         if (targetRoom != null)
             return targetRoom;
 
-        if (RoomRuntimeManager.Instance != null)
+        if (useRuntimeCurrentRoomIfTargetMissing &&
+            RoomRuntimeManager.Instance != null)
             return RoomRuntimeManager.Instance.currentRoom;
 
         return null;
+    }
+
+    bool HasDirectDoors()
+    {
+        if (directDoors == null)
+            return false;
+
+        foreach (DoorController door in directDoors)
+        {
+            if (door != null)
+                return true;
+        }
+
+        return false;
+    }
+
+    void SetDirectDoors(bool open)
+    {
+        foreach (DoorController door in directDoors)
+        {
+            if (door == null)
+                continue;
+
+            if (open)
+                door.Open();
+            else
+                door.Close();
+        }
     }
 }
