@@ -46,7 +46,7 @@ public class CarryWeightBlock : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        SetTriggerColliders(true);
+        SetCollidersEnabled(false);
         ForceHoldTransform(holdPoint);
     }
 
@@ -79,12 +79,12 @@ public class CarryWeightBlock : MonoBehaviour
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        SetTriggerColliders(false);
+        SetCollidersEnabled(true);
 
         rb.AddForce(force, ForceMode.VelocityChange);
     }
 
-    void SetTriggerColliders(bool isTrigger)
+    void SetCollidersEnabled(bool enabled)
     {
         if (colliders == null)
             return;
@@ -92,7 +92,7 @@ public class CarryWeightBlock : MonoBehaviour
         foreach (Collider col in colliders)
         {
             if (col != null)
-                col.isTrigger = isTrigger;
+                col.enabled = enabled;
         }
     }
 }

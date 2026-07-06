@@ -2,23 +2,37 @@ using UnityEngine;
 
 public class CarryObjectController : MonoBehaviour
 {
+    [Header("参照")]
     public Camera playerCamera;
     public CarryObjectHoldPointSet holdPointSet;
 
+    [Header("通常アイテム操作を止める")]
     public HeldItemController heldItemController;
     public ItemThrower itemThrower;
 
+    [Header("入力")]
     public KeyCode interactKey = KeyCode.E;
     public KeyCode releaseKey = KeyCode.G;
     public int rotateMouseButton = 1;
 
+    [Header("拾う")]
     public float pickupDistance = 3f;
     public LayerMask pickupMask = ~0;
 
+    [Header("投げチャージ")]
+    public bool useThrowCharge = true;
+    public float maxChargeTime = 1.2f;
+    public ThrowChargeGaugeUI chargeGauge;
+
+    [Header("操作")]
     public bool releaseWithInteractKey = true;
+
+    [Header("デバッグ")]
     public bool debugLog = true;
 
-    CarryObject currentObject;
+    private CarryObject currentObject;
+    private bool charging;
+    private float chargeTimer;
 
     public bool IsCarrying => currentObject != null;
 
@@ -32,11 +46,13 @@ public class CarryObjectController : MonoBehaviour
             return;
         }
 
-        UpdateHeldObject();
         HandleRotation();
+        HandleReleaseAndThrow();
+    }
 
-        if (Input.GetKeyDown(releaseKey) || (releaseWithInteractKey && Input.GetKeyDown(interactKey)))
-            ReleaseObject();
+    void LateUpdate()
+    {
+        UpdateHeldObject();
     }
 
     void TryPickup()
@@ -64,6 +80,12 @@ public class CarryObjectController : MonoBehaviour
         if (carryObject == null || currentObject != null)
             return;
 
+        if (carryObject.canStoreInInventory)
+        {
+            Debug.LogWarning(carryObject.name + " はインベントリ格納対象です。PickupItem側で扱ってください。");
+            return;
+        }
+
         Transform holdPoint = GetHoldPoint(carryObject);
 
         if (holdPoint == null)
@@ -74,6 +96,10 @@ public class CarryObjectController : MonoBehaviour
 
         currentObject = carryObject;
         currentObject.Hold(holdPoint);
+
+        charging = false;
+        chargeTimer = 0f;
+        HideGauge();
 
         SetNormalItemControl(false);
 
@@ -110,22 +136,121 @@ public class CarryObjectController : MonoBehaviour
         ));
     }
 
-    public void ReleaseObject()
+    void HandleReleaseAndThrow()
     {
         if (currentObject == null)
             return;
 
-        Camera cam = playerCamera != null ? playerCamera : Camera.main;
-        Transform origin = cam != null ? cam.transform : transform;
+        if (releaseWithInteractKey && Input.GetKeyDown(interactKey))
+        {
+            DropObject();
+            return;
+        }
+
+        if (!currentObject.canThrow || !useThrowCharge)
+        {
+            if (Input.GetKeyDown(releaseKey))
+                DropObject();
+
+            return;
+        }
+
+        if (Input.GetKeyDown(releaseKey))
+            StartCharge();
+
+        if (charging && Input.GetKey(releaseKey))
+        {
+            chargeTimer += Time.deltaTime;
+
+            if (chargeTimer > maxChargeTime)
+                chargeTimer = maxChargeTime;
+
+            UpdateGauge();
+        }
+
+        if (charging && Input.GetKeyUp(releaseKey))
+            ThrowObject();
+    }
+
+    void StartCharge()
+    {
+        charging = true;
+        chargeTimer = 0f;
+        UpdateGauge();
+    }
+
+    float GetChargeRate()
+    {
+        if (maxChargeTime <= 0f)
+            return 1f;
+
+        return Mathf.Clamp01(chargeTimer / maxChargeTime);
+    }
+
+    void UpdateGauge()
+    {
+        if (chargeGauge != null)
+            chargeGauge.SetRate(GetChargeRate());
+    }
+
+    void HideGauge()
+    {
+        if (chargeGauge != null)
+            chargeGauge.Hide();
+    }
+
+    public void DropObject()
+    {
+        if (currentObject == null)
+            return;
 
         CarryObject obj = currentObject;
         currentObject = null;
 
-        obj.ReleaseFrom(origin);
+        charging = false;
+        chargeTimer = 0f;
+        HideGauge();
+
+        Transform origin = GetReleaseOrigin();
+        obj.DropFrom(origin);
+
         SetNormalItemControl(true);
 
         if (debugLog)
             Debug.Log("CarryObjectを手放した: " + obj.name);
+    }
+
+    public void ThrowObject()
+    {
+        if (currentObject == null)
+            return;
+
+        CarryObject obj = currentObject;
+        currentObject = null;
+
+        float chargeRate = GetChargeRate();
+
+        charging = false;
+        chargeTimer = 0f;
+        HideGauge();
+
+        Transform origin = GetReleaseOrigin();
+        obj.ThrowFrom(origin, chargeRate);
+
+        SetNormalItemControl(true);
+
+        if (debugLog)
+            Debug.Log("CarryObjectを投げた: " + obj.name + " / charge=" + chargeRate);
+    }
+
+    Transform GetReleaseOrigin()
+    {
+        Camera cam = playerCamera != null ? playerCamera : Camera.main;
+
+        if (cam != null)
+            return cam.transform;
+
+        return transform;
     }
 
     Transform GetHoldPoint(CarryObject carryObject)

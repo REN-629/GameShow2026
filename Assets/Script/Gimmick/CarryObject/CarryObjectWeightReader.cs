@@ -16,7 +16,7 @@ public static class CarryObjectWeightReader
             if (carryObject.isHeld)
                 return false;
 
-            weight = carryObject.GetWeight();
+            weight = Mathf.Max(0f, carryObject.GetWeight());
             return true;
         }
 

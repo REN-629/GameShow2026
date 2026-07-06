@@ -248,6 +248,11 @@ public class PressurePlatePuzzle : MonoBehaviour
         if (obj == null)
             return 0f;
 
+        CarryObject heldCarryObjectCheck = obj.GetComponent<CarryObject>();
+
+        if (heldCarryObjectCheck != null && heldCarryObjectCheck.isHeld)
+            return 0f;
+
         PlayerWeightProxy player =
             obj.GetComponent<PlayerWeightProxy>();
 
