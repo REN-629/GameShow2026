@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1135595385690870787}
   m_Layer: 0
-  m_Name: CarryCube
+  m_Name: CarryBall
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -43,9 +43,9 @@ GameObject:
   - component: {fileID: 4707835184608104013}
   - component: {fileID: 8988549989252844061}
   - component: {fileID: 7980626526399729337}
-  - component: {fileID: 8522461735894511676}
   - component: {fileID: 1368111858478726876}
   - component: {fileID: 4750316438592471984}
+  - component: {fileID: 2332098489882429192}
   m_Layer: 0
   m_Name: Cube
   m_TagString: Untagged
@@ -63,7 +63,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1135595385690870787}
@@ -75,7 +75,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7414235060620247285}
-  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
 --- !u!23 &7980626526399729337
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -121,27 +121,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &8522461735894511676
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7414235060620247285}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!54 &1368111858478726876
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -182,10 +161,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectType: 0
-  weight: 20
+  weight: 10
   canStoreInInventory: 0
   canCarry: 1
-  holdType: 3
+  holdType: 1
   heldPositionOffset: {x: 0, y: 0, z: 0}
   heldRotationOffset: {x: 0, y: 0, z: 0}
   useCustomHoldPoint: 0
@@ -197,8 +176,8 @@ MonoBehaviour:
   releaseUpOffset: 0.2
   dropForce: 1
   canThrow: 1
-  minThrowForce: 1
-  maxThrowForce: 15
+  minThrowForce: 3
+  maxThrowForce: 40
   throwForceMultiplier: 1
   addSpinOnThrow: 1
   maxAngularVelocity: {x: 8, y: 14, z: 10}
@@ -207,6 +186,28 @@ MonoBehaviour:
   disableCollidersWhileHeld: 1
   forceContinuousCollisionOnRelease: 1
   useInterpolationOnRelease: 1
-  makeTransparentWhileHeld: 1
+  makeTransparentWhileHeld: 0
   heldAlpha: 0.35
   isHeld: 0
+--- !u!64 &2332098489882429192
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7414235060620247285}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
