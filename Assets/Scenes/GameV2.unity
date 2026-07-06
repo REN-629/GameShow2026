@@ -5281,6 +5281,8 @@ MonoBehaviour:
   roomPrefabs:
   - {fileID: 3899988545844213169, guid: 9dd5979bc3df22f4ea1671ecb8f6e31c, type: 3}
   - {fileID: 3899988545844213169, guid: ae3e89599ff7f04438359883151955ec, type: 3}
+  - {fileID: 3899988545844213169, guid: 99dc5ec1b17b4144e8bda3377e967521, type: 3}
+  - {fileID: 3899988545844213169, guid: eb8b97bea8edeb6418ba16a677aa3748, type: 3}
   doorPrefabs:
   - {fileID: 8512036536275225885, guid: 3b65609ae6f7a6f46ba23e622c448c0c, type: 3}
   - {fileID: 5196458409043475981, guid: 14f66cc941091f048b6417f4ee1ce296, type: 3}
