@@ -94,6 +94,8 @@ public class CarryObjectController : MonoBehaviour
             return;
         }
 
+        StoreHeldItemBeforeCarry();
+
         currentObject = carryObject;
         currentObject.Hold(holdPoint);
 
@@ -265,6 +267,13 @@ public class CarryObjectController : MonoBehaviour
             return null;
 
         return holdPointSet.GetHoldPoint(carryObject.holdType);
+    }
+
+
+    void StoreHeldItemBeforeCarry()
+    {
+        if (heldItemController != null)
+            heldItemController.StoreCurrentHeldItemForExternalHold();
     }
 
     void SetNormalItemControl(bool enabled)

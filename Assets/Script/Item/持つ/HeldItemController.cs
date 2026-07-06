@@ -219,6 +219,32 @@ public class HeldItemController : MonoBehaviour
         }
     }
 
+
+    public void StoreCurrentHeldItemForExternalHold()
+    {
+        if (currentHeldItem != null)
+        {
+            RestoreItemLayer(currentHeldItem);
+            currentHeldItem.SetStoredState();
+        }
+
+        if (pendingItem != null && pendingItem != currentHeldItem)
+        {
+            RestoreItemLayer(pendingItem);
+            pendingItem.SetStoredState();
+        }
+
+        currentHeldItem = null;
+        pendingItem = null;
+        IsRotatingItem = false;
+
+        if (useAnimator != null)
+            useAnimator.ForceStop();
+
+        if (switchAnimator != null)
+            switchAnimator.ForceStop();
+    }
+
     public PickupItem GetCurrentHeldItem()
     {
         return currentHeldItem;
