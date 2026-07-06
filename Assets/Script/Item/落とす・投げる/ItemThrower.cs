@@ -151,6 +151,9 @@ public class ItemThrower : MonoBehaviour
 
         item.ThrowToWorld(position, rotation, force);
 
+        if (RunActionLogger.Instance != null)
+            RunActionLogger.Instance.LogThrow();
+
         ApplySpin(item, chargeRate);
 
         if (debugLog)

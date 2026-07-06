@@ -2,6 +2,7 @@ public enum RoomClearMethod
 {
     Unknown,
     NormalPuzzle,
+    IdeaUnique,
     PressurePlate,
     GoalTrigger,
     DoorDestroyed,

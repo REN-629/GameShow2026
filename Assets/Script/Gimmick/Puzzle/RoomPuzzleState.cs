@@ -70,13 +70,18 @@ public class RoomPuzzleState : MonoBehaviour
         {
             case PuzzleSolveMethod.Normal:
                 return RoomClearMethod.NormalPuzzle;
-            case PuzzleSolveMethod.Item:
+
             case PuzzleSolveMethod.Weight:
+                return RoomClearMethod.PressurePlate;
+
+            case PuzzleSolveMethod.Item:
             case PuzzleSolveMethod.Shortcut:
                 return RoomClearMethod.ItemShortcut;
+
             case PuzzleSolveMethod.Break:
             case PuzzleSolveMethod.Force:
                 return RoomClearMethod.ForceBreak;
+
             case PuzzleSolveMethod.Bypass:
                 return RoomClearMethod.BypassedPuzzle;
         }

@@ -284,6 +284,8 @@ public class AttributeDurability : MonoBehaviour
             Debug.Log(name + " は耐久0になりました");
         }
 
+        LogBreakForResult();
+
         // 1. 基本はFractureThisで破砕する
         if (useFractureThis)
         {
@@ -312,6 +314,47 @@ public class AttributeDurability : MonoBehaviour
         {
             Destroy(gameObject);
             return;
+        }
+    }
+
+    void LogBreakForResult()
+    {
+        if (RunActionLogger.Instance == null)
+            return;
+
+        RunResultBreakMarker marker = GetComponentInParent<RunResultBreakMarker>();
+
+        if (marker != null)
+        {
+            if (marker.breakTarget == RunResultBreakTarget.Exit)
+            {
+                RunActionLogger.Instance.LogDoorDestroyed();
+                return;
+            }
+
+            if (marker.breakTarget == RunResultBreakTarget.Wall)
+            {
+                RunActionLogger.Instance.LogWallDestroyed();
+                return;
+            }
+
+            if (marker.breakTarget == RunResultBreakTarget.Other)
+                return;
+        }
+
+        DoorController door = GetComponentInParent<DoorController>();
+
+        if (door != null)
+        {
+            RunActionLogger.Instance.LogDoorDestroyed();
+            return;
+        }
+
+        string lowerName = name.ToLower();
+
+        if (lowerName.Contains("wall") || lowerName.Contains("壁"))
+        {
+            RunActionLogger.Instance.LogWallDestroyed();
         }
     }
 

@@ -99,6 +99,9 @@ public class CarryObjectController : MonoBehaviour
         currentObject = carryObject;
         currentObject.Hold(holdPoint);
 
+        if (RunActionLogger.Instance != null)
+            RunActionLogger.Instance.LogCarryObjectUse();
+
         charging = false;
         chargeTimer = 0f;
         HideGauge();
@@ -238,6 +241,9 @@ public class CarryObjectController : MonoBehaviour
 
         Transform origin = GetReleaseOrigin();
         obj.ThrowFrom(origin, chargeRate);
+
+        if (RunActionLogger.Instance != null)
+            RunActionLogger.Instance.LogCarryObjectThrow();
 
         SetNormalItemControl(true);
 

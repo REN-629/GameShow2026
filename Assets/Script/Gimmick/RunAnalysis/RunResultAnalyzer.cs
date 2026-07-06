@@ -1,5 +1,5 @@
-//リザルトで使うデータ、表示する内容
 using UnityEngine;
+
 public class RunResultAnalyzer : MonoBehaviour
 {
     public static RunResultAnalyzer Instance { get; private set; }
@@ -18,29 +18,47 @@ public class RunResultAnalyzer : MonoBehaviour
             return "記録なし";
 
         int reachedCount = score != null ? score.reachedRoomCount : 0;
+        int clearCount = log.GetClearedRoomCount();
 
-        if (log.destroyedClearCount >= 3 || log.destroyedDoorCount + log.destroyedWallCount >= 5)
-            return "破壊衝動が強め";
+        if (reachedCount <= 0 && clearCount <= 0)
+        {
+            if (log.destroyedDoorCount + log.destroyedWallCount > 0)
+                return "脱出前から破壊衝動あり";
+
+            if (log.itemUseCount > 0 || log.throwCount > 0 || log.carryObjectUseCount > 0)
+                return "準備運動で終了";
+
+            if (log.movedDistance > 40f)
+                return "迷子、まだ攻略前";
+
+            return "測定前に終了";
+        }
+
+        if (log.destroyedClearCount > 0 || log.destroyedDoorCount > 0)
+            return "強引な突破者";
+
+        if (log.ideaUniqueClearCount >= Mathf.Max(1, clearCount * 0.5f))
+            return "発想力豊か、ユニーク攻略多め";
+
+        if (log.normalPuzzleClearCount >= Mathf.Max(1, clearCount * 0.7f))
+            return "正規ルート重視";
 
         if (log.dashTime > log.totalRunTime * 0.45f && log.totalRunTime > 1f)
             return "急ぎすぎ、焦りすぎ";
 
-        if (log.shortcutClearCount >= 2)
-            return "発想力豊か、想定外の攻略法多め";
-
-        if (reachedCount >= 5 && log.normalPuzzleClearCount >= reachedCount * 0.7f)
-            return "真面目、いたって普通";
-
-        if (log.throwCount >= 5)
-            return "道具の扱いが雑";
+        if (log.throwCount + log.carryObjectThrowCount >= 5)
+            return "物の扱いが雑";
 
         if (log.itemUseCount >= 6)
             return "道具に頼りがち";
 
         if (log.bypassedPuzzleCount >= 2)
-            return "パズルが嫌い？もしくは強引";
+            return "パズル回避傾向";
 
-        return "攻略よりも周囲の探索が多い";
+        if (reachedCount >= 3 && log.movedDistance > reachedCount * 35f)
+            return "探索多め";
+
+        return "標準的な攻略傾向";
     }
 
     public string BuildResultText()
@@ -54,23 +72,23 @@ public class RunResultAnalyzer : MonoBehaviour
         int reachedCount = score != null ? score.reachedRoomCount : 0;
         int best = score != null ? score.bestReachedRoomCount : 0;
         int highestLevel = score != null ? score.highestReachedLevel : 1;
+        int clearCount = log.GetClearedRoomCount();
 
         string text = "";
 
         text += "実験結果\n";
         text += "Room" + highestLevel + "内で活動停止\n";
         text += "攻略済みの部屋数 : " + reachedCount + "\n";
+        text += "記録済みクリア数 : " + clearCount + "\n";
         text += "最高記録 : " + best + "\n";
         text += "特筆事項 : " + GetPlayStyleTitle() + "\n";
-
         text += "\n";
 
         text += "攻略データ\n";
-        text += "- 正規クリア : " + log.normalPuzzleClearCount + "\n";
-        text += "- 重量ボタン : " + log.pressurePlateClearCount + "\n";
-        text += "- 到達トリガー : " + log.goalTriggerClearCount + "\n";
+        text += "- 正規攻略 : " + log.normalPuzzleClearCount + "\n";
+        text += "- アイデア攻略 : " + log.ideaUniqueClearCount + "\n";
         text += "- 破壊による突破 : " + log.destroyedClearCount + "\n";
-        text += "- ショートカット : " + log.shortcutClearCount + "\n";
+        text += "- 到達トリガー : " + log.goalTriggerClearCount + "\n";
         text += "- パズル無視 : " + log.bypassedPuzzleCount + "\n";
         text += "\n";
 
@@ -79,6 +97,11 @@ public class RunResultAnalyzer : MonoBehaviour
         text += "- ダッシュしていた時間 : " + log.dashTime.ToString("F1") + "秒\n";
         text += "- ジャンプした回数 : " + log.jumpCount + "\n";
         text += "- 道具の使用回数 : " + log.itemUseCount + "\n";
+        text += "- 道具を投げた回数 : " + log.throwCount + "\n";
+        text += "- CarryObject使用回数 : " + log.carryObjectUseCount + "\n";
+        text += "- CarryObject投擲回数 : " + log.carryObjectThrowCount + "\n";
+        text += "- 出口破壊 : " + log.destroyedDoorCount + "\n";
+        text += "- 壁破壊 : " + log.destroyedWallCount + "\n";
 
         return text;
     }

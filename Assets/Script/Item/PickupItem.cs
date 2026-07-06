@@ -320,6 +320,9 @@ public class PickupItem : MonoBehaviour
 
         bool success = action.Use(this);
 
+        if (success && RunActionLogger.Instance != null)
+            RunActionLogger.Instance.LogItemUse();
+
         if (success && durability != null)
         {
             durability.ApplyDamage(1);
