@@ -63,7 +63,6 @@ public class CarryObject : MonoBehaviour
     private Rigidbody rb;
     private Collider[] colliders;
     private Renderer[] renderers;
-    private MaterialPropertyBlock propertyBlock;
     private bool transparencyApplied;
 
     void Awake()
@@ -81,9 +80,6 @@ public class CarryObject : MonoBehaviour
 
         if (renderers == null || renderers.Length == 0)
             renderers = GetComponentsInChildren<Renderer>(true);
-
-        if (propertyBlock == null)
-            propertyBlock = new MaterialPropertyBlock();
     }
 
     public float GetWeight()
@@ -303,19 +299,17 @@ public class CarryObject : MonoBehaviour
             if (renderer == null)
                 continue;
 
-            renderer.GetPropertyBlock(propertyBlock);
+            Material[] mats = renderer.materials;
 
-            Material mat = renderer.sharedMaterial;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                if (mats[i] == null)
+                    continue;
 
-            Color color = Color.white;
+                SetMaterialTransparent(mats[i], heldAlpha);
+            }
 
-            if (mat != null && mat.HasProperty("_Color"))
-                color = mat.color;
-
-            color.a = heldAlpha;
-
-            propertyBlock.SetColor("_Color", color);
-            renderer.SetPropertyBlock(propertyBlock);
+            renderer.materials = mats;
         }
     }
 
@@ -334,9 +328,82 @@ public class CarryObject : MonoBehaviour
             if (renderer == null)
                 continue;
 
-            renderer.SetPropertyBlock(null);
+            Material[] mats = renderer.materials;
+
+            for (int i = 0; i < mats.Length; i++)
+            {
+                Material mat = mats[i];
+
+                if (mat == null)
+                    continue;
+
+                SetMaterialOpaque(mat);
+            }
+
+            renderer.materials = mats;
         }
 
         transparencyApplied = false;
+    }
+
+    void SetMaterialTransparent(Material mat, float alpha)
+    {
+        if (!mat.HasProperty("_Color"))
+            return;
+
+        Color color = mat.color;
+        color.a = alpha;
+        mat.color = color;
+
+        mat.SetOverrideTag("RenderType", "Transparent");
+        mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+
+        if (mat.HasProperty("_Surface"))
+            mat.SetFloat("_Surface", 1f);
+
+        if (mat.HasProperty("_Blend"))
+            mat.SetFloat("_Blend", 0f);
+
+        if (mat.HasProperty("_SrcBlend"))
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+
+        if (mat.HasProperty("_DstBlend"))
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+
+        if (mat.HasProperty("_ZWrite"))
+            mat.SetInt("_ZWrite", 0);
+
+        mat.EnableKeyword("_ALPHABLEND_ON");
+        mat.DisableKeyword("_ALPHATEST_ON");
+        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+    }
+
+    void SetMaterialOpaque(Material mat)
+    {
+        if (mat.HasProperty("_Color"))
+        {
+            Color color = mat.color;
+            color.a = 1f;
+            mat.color = color;
+        }
+
+        mat.SetOverrideTag("RenderType", "Opaque");
+        mat.renderQueue = -1;
+
+        if (mat.HasProperty("_Surface"))
+            mat.SetFloat("_Surface", 0f);
+
+        if (mat.HasProperty("_SrcBlend"))
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
+
+        if (mat.HasProperty("_DstBlend"))
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);
+
+        if (mat.HasProperty("_ZWrite"))
+            mat.SetInt("_ZWrite", 1);
+
+        mat.DisableKeyword("_ALPHABLEND_ON");
+        mat.DisableKeyword("_ALPHATEST_ON");
+        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
     }
 }

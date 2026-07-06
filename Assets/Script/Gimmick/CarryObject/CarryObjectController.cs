@@ -24,10 +24,6 @@ public class CarryObjectController : MonoBehaviour
     public float maxChargeTime = 1.2f;
     public ThrowChargeGaugeUI chargeGauge;
 
-    [Header("ゲージ表示")]
-    public bool showGaugeWhileHolding = true;
-    public bool hideGaugeWhenNotCarrying = true;
-
     [Header("操作")]
     public bool releaseWithInteractKey = true;
 
@@ -44,9 +40,6 @@ public class CarryObjectController : MonoBehaviour
     {
         if (currentObject == null)
         {
-            if (hideGaugeWhenNotCarrying)
-                HideGauge();
-
             if (Input.GetKeyDown(interactKey))
                 TryPickup();
 
@@ -106,11 +99,7 @@ public class CarryObjectController : MonoBehaviour
 
         charging = false;
         chargeTimer = 0f;
-
-        if (showGaugeWhileHolding && currentObject.canThrow && useThrowCharge)
-            UpdateGauge();
-        else
-            HideGauge();
+        HideGauge();
 
         SetNormalItemControl(false);
 
