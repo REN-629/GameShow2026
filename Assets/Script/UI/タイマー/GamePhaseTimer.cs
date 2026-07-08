@@ -161,6 +161,14 @@ public class GamePhaseTimer : MonoBehaviour
         if (sendCollapseMessageOnTimeout && collapseTarget != null)
             collapseTarget.SendMessage(collapseMessage, SendMessageOptions.DontRequireReceiver);
 
+        //演出用
+        if (TimeOverShutdownEffect.Instance != null)
+        {
+            TimeOverShutdownEffect.Instance.PlayAndLoad(nextSceneName);
+            return;
+        }
+
+
         StartCoroutine(LoadSceneAfterWait());
     }
 
