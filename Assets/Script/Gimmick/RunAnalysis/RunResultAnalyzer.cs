@@ -35,16 +35,16 @@ public class RunResultAnalyzer : MonoBehaviour
         }
 
         if (log.destroyedClearCount > 0 || log.destroyedDoorCount > 0)
-            return "強引な突破者";
+            return "強引、効率重視？";
 
         if (log.ideaUniqueClearCount >= Mathf.Max(1, clearCount * 0.5f))
-            return "発想力豊か、ユニーク攻略多め";
+            return "発想力豊か、斬新な攻略が多め";
 
         if (log.normalPuzzleClearCount >= Mathf.Max(1, clearCount * 0.7f))
-            return "正規ルート重視";
+            return "真面目、正規攻略多め";
 
         if (log.dashTime > log.totalRunTime * 0.45f && log.totalRunTime > 1f)
-            return "急ぎすぎ、焦りすぎ";
+            return "急ぎすぎ、焦りすぎ、記録を意識している？";
 
         if (log.throwCount + log.carryObjectThrowCount >= 5)
             return "物の扱いが雑";
@@ -88,8 +88,6 @@ public class RunResultAnalyzer : MonoBehaviour
         text += "- 正規攻略 : " + log.normalPuzzleClearCount + "\n";
         text += "- アイデア攻略 : " + log.ideaUniqueClearCount + "\n";
         text += "- 破壊による突破 : " + log.destroyedClearCount + "\n";
-        text += "- 到達トリガー : " + log.goalTriggerClearCount + "\n";
-        text += "- パズル無視 : " + log.bypassedPuzzleCount + "\n";
         text += "\n";
 
         text += "行動データ\n";
@@ -98,10 +96,7 @@ public class RunResultAnalyzer : MonoBehaviour
         text += "- ジャンプした回数 : " + log.jumpCount + "\n";
         text += "- 道具の使用回数 : " + log.itemUseCount + "\n";
         text += "- 道具を投げた回数 : " + log.throwCount + "\n";
-        text += "- CarryObject使用回数 : " + log.carryObjectUseCount + "\n";
-        text += "- CarryObject投擲回数 : " + log.carryObjectThrowCount + "\n";
         text += "- 出口破壊 : " + log.destroyedDoorCount + "\n";
-        text += "- 壁破壊 : " + log.destroyedWallCount + "\n";
 
         return text;
     }
