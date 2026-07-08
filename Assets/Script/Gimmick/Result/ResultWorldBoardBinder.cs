@@ -1,20 +1,21 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class ResultWorldBoardBinder : MonoBehaviour
 {
-    [Header("看板に表示するTextMeshPro")]
-    public TextMeshPro boardTMP;
-
-    [Header("予備: UI TextMeshPro")]
-    public TextMeshProUGUI boardTMPUI;
+    [Header("看板に表示するTMP")]
+    public TMP_Text boardTMP;
 
     [Header("予備: Legacy Text")]
     public Text boardText;
 
+    [Header("日本語対応TMP Font Asset")]
+    public TMP_FontAsset resultFont;
+
     [Header("表示設定")]
     public bool bindOnStart = true;
+    public bool applyFontOnBind = true;
 
     [TextArea(4, 12)]
     public string fallbackText = "測定結果を取得できませんでした。";
@@ -38,10 +39,12 @@ public class ResultWorldBoardBinder : MonoBehaviour
     void SetText(string value)
     {
         if (boardTMP != null)
-            boardTMP.text = value;
+        {
+            if (applyFontOnBind && resultFont != null)
+                boardTMP.font = resultFont;
 
-        if (boardTMPUI != null)
-            boardTMPUI.text = value;
+            boardTMP.text = value;
+        }
 
         if (boardText != null)
             boardText.text = value;

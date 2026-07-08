@@ -1,7 +1,7 @@
 using UnityEngine;
 using TMPro;
 
-public class RunResultUI : MonoBehaviour
+[System.Obsolete("ResultWorldBoardBinderを推奨。古いUI表示互換用です。")]\npublic class RunResultUI : MonoBehaviour
 {
     [Header("リザルト表示Text")]
     public TextMeshProUGUI resultText;

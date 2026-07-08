@@ -35,7 +35,7 @@ public class RunResultAnalyzer : MonoBehaviour
         }
 
         if (log.destroyedClearCount > 0 || log.destroyedDoorCount > 0)
-            return "強引、効率重視？";
+            return "強引な突破者";
 
         if (log.ideaUniqueClearCount >= Mathf.Max(1, clearCount * 0.5f))
             return "発想力豊か、斬新な攻略が多め";
@@ -87,7 +87,7 @@ public class RunResultAnalyzer : MonoBehaviour
         text += "攻略データ\n";
         text += "- 正規攻略 : " + log.normalPuzzleClearCount + "\n";
         text += "- アイデア攻略 : " + log.ideaUniqueClearCount + "\n";
-        text += "- 破壊による突破 : " + log.destroyedClearCount + "\n";
+        text += "- 破壊突破 : " + log.destroyedClearCount + "\n";
         text += "\n";
 
         text += "行動データ\n";
