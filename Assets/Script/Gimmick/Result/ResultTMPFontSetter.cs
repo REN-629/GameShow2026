@@ -6,6 +6,9 @@ public class ResultTMPFontSetter : MonoBehaviour
     [Header("日本語対応TMP Font Asset")]
     public TMP_FontAsset resultFont;
 
+    [Header("Fallback Font Asset")]
+    public TMP_FontAsset fallbackFont;
+
     [Header("対象Text")]
     public TMP_Text[] targetTexts;
 
@@ -23,9 +26,6 @@ public class ResultTMPFontSetter : MonoBehaviour
 
     public void Apply()
     {
-        if (resultFont == null)
-            return;
-
         if (autoCollectChildren)
             targetTexts = GetComponentsInChildren<TMP_Text>(true);
 
@@ -37,7 +37,17 @@ public class ResultTMPFontSetter : MonoBehaviour
             if (text == null)
                 continue;
 
-            text.font = resultFont;
+            if (resultFont != null)
+                text.font = resultFont;
+
+            if (fallbackFont != null &&
+                text.font != null &&
+                !text.font.fallbackFontAssetTable.Contains(fallbackFont))
+            {
+                text.font.fallbackFontAssetTable.Add(fallbackFont);
+            }
+
+            text.SetAllDirty();
         }
     }
 }

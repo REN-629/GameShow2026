@@ -10,7 +10,7 @@ public class ResultBoardClickable : MonoBehaviour
     [Header("カメラ基準で手前に持ってくる")]
     public bool useCameraRelativeTarget = true;
     public Camera targetCamera;
-    public Vector3 cameraRelativePosition = new Vector3(0f, 0f, 1.4f);
+    public Vector3 cameraRelativePosition = new Vector3(0f, 0f, 1.25f);
     public Vector3 cameraRelativeEulerAngles = new Vector3(0f, 180f, 0f);
 
     [Header("固定移動先")]
@@ -19,7 +19,8 @@ public class ResultBoardClickable : MonoBehaviour
 
     [Header("移動時間")]
     public float moveDuration = 0.35f;
-    public AnimationCurve moveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    public AnimationCurve moveCurve =
+        AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("時間")]
     public bool useUnscaledTime = true;
@@ -50,8 +51,8 @@ public class ResultBoardClickable : MonoBehaviour
 
     public void ToggleFocus()
     {
-        if (ResultCursorManager.Instance != null &&
-            !ResultCursorManager.Instance.CanInteract(this))
+        if (ResultCursorController.Instance != null &&
+            !ResultCursorController.Instance.CanFocus(this))
             return;
 
         if (isFocused)
@@ -72,14 +73,10 @@ public class ResultBoardClickable : MonoBehaviour
 
         isFocused = true;
 
-        if (ResultCursorManager.Instance != null)
-            ResultCursorManager.Instance.SetActiveBoard(this);
+        if (ResultCursorController.Instance != null)
+            ResultCursorController.Instance.RegisterFocusedBoard(this);
 
-        Vector3 targetPos;
-        Quaternion targetRot;
-
-        GetFocusPose(out targetPos, out targetRot);
-
+        GetFocusPose(out Vector3 targetPos, out Quaternion targetRot);
         StartMove(targetPos, targetRot);
     }
 
@@ -89,11 +86,10 @@ public class ResultBoardClickable : MonoBehaviour
             return;
 
         isFocused = false;
-
         StartMove(originalPosition, originalRotation);
 
-        if (ResultCursorManager.Instance != null)
-            ResultCursorManager.Instance.ClearActiveBoard(this);
+        if (ResultCursorController.Instance != null)
+            ResultCursorController.Instance.UnregisterFocusedBoard(this);
     }
 
     void GetFocusPose(out Vector3 pos, out Quaternion rot)
@@ -112,7 +108,10 @@ public class ResultBoardClickable : MonoBehaviour
                     ct.up * cameraRelativePosition.y +
                     ct.forward * cameraRelativePosition.z;
 
-                rot = ct.rotation * Quaternion.Euler(cameraRelativeEulerAngles);
+                rot =
+                    ct.rotation *
+                    Quaternion.Euler(cameraRelativeEulerAngles);
+
                 return;
             }
         }
@@ -126,26 +125,40 @@ public class ResultBoardClickable : MonoBehaviour
         if (moveRoutine != null)
             StopCoroutine(moveRoutine);
 
-        moveRoutine = StartCoroutine(MoveRoutine(targetPos, targetRot));
+        moveRoutine =
+            StartCoroutine(MoveRoutine(targetPos, targetRot));
     }
 
     IEnumerator MoveRoutine(Vector3 targetPos, Quaternion targetRot)
     {
         Vector3 startPos = moveTarget.position;
         Quaternion startRot = moveTarget.rotation;
-
         float timer = 0f;
 
         while (timer < moveDuration)
         {
-            float delta = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
+            float delta =
+                useUnscaledTime
+                ? Time.unscaledDeltaTime
+                : Time.deltaTime;
+
             timer += delta;
 
-            float t = moveDuration > 0f ? Mathf.Clamp01(timer / moveDuration) : 1f;
-            float e = moveCurve != null ? moveCurve.Evaluate(t) : t;
+            float t =
+                moveDuration > 0f
+                ? Mathf.Clamp01(timer / moveDuration)
+                : 1f;
 
-            moveTarget.position = Vector3.LerpUnclamped(startPos, targetPos, e);
-            moveTarget.rotation = Quaternion.SlerpUnclamped(startRot, targetRot, e);
+            float eased =
+                moveCurve != null
+                ? moveCurve.Evaluate(t)
+                : t;
+
+            moveTarget.position =
+                Vector3.LerpUnclamped(startPos, targetPos, eased);
+
+            moveTarget.rotation =
+                Quaternion.SlerpUnclamped(startRot, targetRot, eased);
 
             yield return null;
         }

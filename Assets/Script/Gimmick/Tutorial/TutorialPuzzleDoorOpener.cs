@@ -1,6 +1,7 @@
 using UnityEngine;
 
-[System.Obsolete("RoomPuzzleTargetを推奨。古いチュートリアル用ドア制御互換です。")]\npublic class TutorialPuzzleDoorOpener : MonoBehaviour
+[System.Obsolete("RoomPuzzleTargetを推奨。古いチュートリアル用ドア制御互換です。")]
+public class TutorialPuzzleDoorOpener : MonoBehaviour
 {
     [Header("制御するドア")]
     public DoorController[] doors;

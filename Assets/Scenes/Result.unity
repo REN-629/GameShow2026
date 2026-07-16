@@ -1642,12 +1642,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f328f4b9a58dd3f4dadd813e3491dfd4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  worldBoardBinder: {fileID: 0}
   resultTMP: {fileID: 0}
   clearRoomTMP: {fileID: 0}
   bestRoomTMP: {fileID: 0}
   resultText: {fileID: 0}
   clearRoomText: {fileID: 0}
   bestRoomText: {fileID: 0}
+  hideLegacyResultUIOnStart: 1
 --- !u!4 &943503589
 Transform:
   m_ObjectHideFlags: 0
@@ -2204,6 +2206,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 635122296}
     m_Modifications:
+    - target: {fileID: 2115783865137716145, guid: 794ca9ac3e34a6c42bd845432f87cd68,
+        type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7771834551110331328, guid: 794ca9ac3e34a6c42bd845432f87cd68,
         type: 3}
       propertyPath: m_Name
@@ -2297,9 +2304,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boardTMP: {fileID: 2081236040}
-  boardTMPUI: {fileID: 0}
+  resultFont: {fileID: 0}
+  fallbackFont: {fileID: 0}
   boardText: {fileID: 0}
   bindOnStart: 1
+  applyFontOnBind: 1
+  addFallbackToFont: 0
   fallbackText: "\u6E2C\u5B9A\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F"
 --- !u!1001 &1449058158
 PrefabInstance:
@@ -3002,8 +3012,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\u7D50\u679C"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 22d4d08d7d9bfbe499cd003bda56f445, type: 2}
-  m_sharedMaterial: {fileID: -93928088502508809, guid: 22d4d08d7d9bfbe499cd003bda56f445,
+  m_fontAsset: {fileID: 11400000, guid: 88ef1166ce9381e4aaac39240a650410, type: 2}
+  m_sharedMaterial: {fileID: -8988894752426634071, guid: 88ef1166ce9381e4aaac39240a650410,
     type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -3098,7 +3108,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -93928088502508809, guid: 22d4d08d7d9bfbe499cd003bda56f445, type: 2}
+  - {fileID: -8988894752426634071, guid: 88ef1166ce9381e4aaac39240a650410, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
