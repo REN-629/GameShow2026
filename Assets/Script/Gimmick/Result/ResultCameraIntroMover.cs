@@ -18,13 +18,17 @@ public class ResultCameraIntroMover : MonoBehaviour
     public Vector3 targetEulerAngles = new Vector3(10f, 0f, 0f);
 
     [Header("移動時間")]
+    [Min(0f)]
     public float moveDuration = 2f;
 
     [Header("カーブ")]
-    public AnimationCurve moveCurve = AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
+    public AnimationCurve moveCurve =
+        AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
     [Header("時間")]
-    public bool useUnscaledTime = false;
+    public bool useUnscaledTime;
+
+    public bool IsMoving { get; private set; }
 
     void Start()
     {
@@ -45,28 +49,66 @@ public class ResultCameraIntroMover : MonoBehaviour
 
     IEnumerator MoveRoutine()
     {
-        Transform cam = targetCamera.transform;
+        IsMoving = true;
 
-        Quaternion startRot = Quaternion.Euler(startEulerAngles);
-        Quaternion targetRot = Quaternion.Euler(targetEulerAngles);
+        Transform cameraTransform = targetCamera.transform;
+        Quaternion startRotation =
+            Quaternion.Euler(startEulerAngles);
+        Quaternion targetRotation =
+            Quaternion.Euler(targetEulerAngles);
+
+        if (moveDuration <= 0f)
+        {
+            cameraTransform.SetPositionAndRotation(
+                targetPosition,
+                targetRotation
+            );
+
+            IsMoving = false;
+            yield break;
+        }
 
         float timer = 0f;
 
         while (timer < moveDuration)
         {
-            float delta = useUnscaledTime ? Time.unscaledDeltaTime : Time.deltaTime;
-            timer += delta;
+            float deltaTime =
+                useUnscaledTime
+                ? Time.unscaledDeltaTime
+                : Time.deltaTime;
 
-            float t = moveDuration > 0f ? Mathf.Clamp01(timer / moveDuration) : 1f;
-            float e = moveCurve != null ? moveCurve.Evaluate(t) : t;
+            timer += deltaTime;
 
-            cam.position = Vector3.LerpUnclamped(startPosition, targetPosition, e);
-            cam.rotation = Quaternion.SlerpUnclamped(startRot, targetRot, e);
+            float normalizedTime =
+                Mathf.Clamp01(timer / moveDuration);
+
+            float easedTime =
+                moveCurve != null
+                ? moveCurve.Evaluate(normalizedTime)
+                : normalizedTime;
+
+            cameraTransform.position =
+                Vector3.LerpUnclamped(
+                    startPosition,
+                    targetPosition,
+                    easedTime
+                );
+
+            cameraTransform.rotation =
+                Quaternion.SlerpUnclamped(
+                    startRotation,
+                    targetRotation,
+                    easedTime
+                );
 
             yield return null;
         }
 
-        cam.position = targetPosition;
-        cam.rotation = targetRot;
+        cameraTransform.SetPositionAndRotation(
+            targetPosition,
+            targetRotation
+        );
+
+        IsMoving = false;
     }
 }
