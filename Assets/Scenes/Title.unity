@@ -2694,6 +2694,7 @@ GameObject:
   - component: {fileID: 1203168038}
   - component: {fileID: 1203168037}
   - component: {fileID: 1203168036}
+  - component: {fileID: 1900000001}
   m_Layer: 5
   m_Name: TV
   m_TagString: Untagged
@@ -5610,3 +5611,74 @@ SceneRoots:
   - {fileID: 1813023335}
   - {fileID: 1426099403}
   - {fileID: 1203168039}
+--- !u!114 &1900000001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1203168035}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50f7cf01e2f047429d3be5bf420cf9aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tvCanvas: {fileID: 1203168038}
+  roomRawImage: {fileID: 838349118}
+  tutorialRawTexture: {fileID: 0}
+  startRawTexture: {fileID: 0}
+  menuFont: {fileID: 11400000, guid: 88ef1166ce9381e4aaac39240a650410, type: 2}
+  tutorialSceneName: 
+  easySceneName: 
+  hardSceneName: 
+  tutorialSpawnPrefab: {fileID: 0}
+  easySpawnPrefab: {fileID: 0}
+  hardSpawnPrefab: {fileID: 0}
+  spawnPoint: {fileID: 0}
+  mainCamera: {fileID: 1130102}
+  cameraTarget: {fileID: 0}
+  cameraMoveDuration: 1.6
+  cameraMoveCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  openingFadeDuration: 1.2
+  rawSwitchDelay: 0.5
+  flickerDuration: 0.8
+  flickerInterval: 0.06
+  fadeOutDuration: 1
+  sceneLoadDelay: 0.1
+  useUnscaledTime: 1
+  selectSE: {fileID: 0}
+  backSE: {fileID: 0}
+  startSE: {fileID: 0}
+  seVolume: 1
+  normalCursorSprite: {fileID: 0}
+  hoverCursorSprite: {fileID: 0}
+  cursorSize: {x: 18, y: 18}
+  cursorOffset: {x: 3, y: -3}
+  hideSystemCursor: 1
+  buttonSize: {x: 190, y: 42}
+  buttonSpacing: 12
+  buttonFontSize: 24
+  phase: 0
