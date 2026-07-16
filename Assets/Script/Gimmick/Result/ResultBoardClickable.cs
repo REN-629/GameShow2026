@@ -4,15 +4,9 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class ResultBoardClickable : MonoBehaviour
 {
-    [Header("必須設定")]
-
-    [Tooltip("移動させる看板全体のルートを指定してください。")]
     public Transform moveTarget;
-
-    [Tooltip("看板を持ってくる位置の空オブジェクト。看板の子にはしないでください。")]
     public Transform focusPoint;
 
-    [Header("移動")]
     [Min(0f)]
     public float moveDuration = 0.35f;
 
@@ -22,9 +16,8 @@ public class ResultBoardClickable : MonoBehaviour
     public bool useUnscaledTime = true;
     public bool clickAgainToReturn = true;
 
-    [Header("状態")]
-    public bool isFocused;
-    public bool isMoving;
+    [SerializeField] private bool isFocused;
+    [SerializeField] private bool isMoving;
 
     private Vector3 originalPosition;
     private Quaternion originalRotation;
@@ -35,40 +28,11 @@ public class ResultBoardClickable : MonoBehaviour
         if (moveTarget == null)
             moveTarget = transform;
 
-        Collider col = GetComponent<Collider>();
+        isFocused = false;
+        isMoving = false;
 
-        if (col != null)
-            col.isTrigger = false;
-    }
-
-    void Start()
-    {
         originalPosition = moveTarget.position;
         originalRotation = moveTarget.rotation;
-
-        ValidateReferences();
-    }
-
-    void ValidateReferences()
-    {
-        if (focusPoint == null)
-        {
-            Debug.LogError(
-                $"{name}: Focus Pointが設定されていません。",
-                this
-            );
-            return;
-        }
-
-        if (focusPoint == moveTarget ||
-            focusPoint.IsChildOf(moveTarget))
-        {
-            Debug.LogError(
-                $"{name}: Focus Pointを看板の子にしてはいけません。" +
-                " Main Cameraかシーン直下に置いてください。",
-                this
-            );
-        }
     }
 
     public void ToggleFocus()
@@ -78,7 +42,9 @@ public class ResultBoardClickable : MonoBehaviour
 
         if (ResultCursorController.Instance != null &&
             !ResultCursorController.Instance.CanFocus(this))
+        {
             return;
+        }
 
         if (isFocused)
         {
@@ -93,26 +59,21 @@ public class ResultBoardClickable : MonoBehaviour
 
     public void MoveToFocus()
     {
-        if (isFocused || isMoving)
+        if (isFocused || isMoving || focusPoint == null)
             return;
 
-        if (!CanUseFocusPoint())
+        if (focusPoint == moveTarget ||
+            focusPoint.IsChildOf(moveTarget))
+        {
             return;
-
-        // 移動開始時点のワールド座標を固定。
-        // 移動中にFocusPointが動いても追従しない。
-        Vector3 targetPosition = focusPoint.position;
-        Quaternion targetRotation = focusPoint.rotation;
+        }
 
         isFocused = true;
 
         if (ResultCursorController.Instance != null)
-        {
-            ResultCursorController.Instance
-                .RegisterFocusedBoard(this);
-        }
+            ResultCursorController.Instance.RegisterFocusedBoard(this);
 
-        StartMovement(targetPosition, targetRotation);
+        StartMovement(focusPoint.position, focusPoint.rotation);
     }
 
     public void ReturnToOriginal()
@@ -123,46 +84,9 @@ public class ResultBoardClickable : MonoBehaviour
         isFocused = false;
 
         if (ResultCursorController.Instance != null)
-        {
-            ResultCursorController.Instance
-                .UnregisterFocusedBoard(this);
-        }
+            ResultCursorController.Instance.UnregisterFocusedBoard(this);
 
         StartMovement(originalPosition, originalRotation);
-    }
-
-    bool CanUseFocusPoint()
-    {
-        if (moveTarget == null)
-        {
-            Debug.LogError(
-                $"{name}: Move Targetがありません。",
-                this
-            );
-            return false;
-        }
-
-        if (focusPoint == null)
-        {
-            Debug.LogError(
-                $"{name}: Focus Pointがありません。",
-                this
-            );
-            return false;
-        }
-
-        if (focusPoint == moveTarget ||
-            focusPoint.IsChildOf(moveTarget))
-        {
-            Debug.LogError(
-                $"{name}: Focus PointがMove Targetの子になっています。" +
-                " 看板とは無関係な場所へ移動してください。",
-                this
-            );
-            return false;
-        }
-
-        return true;
     }
 
     void StartMovement(
@@ -185,49 +109,38 @@ public class ResultBoardClickable : MonoBehaviour
 
         Vector3 startPosition = moveTarget.position;
         Quaternion startRotation = moveTarget.rotation;
-
-        if (moveDuration <= 0f)
-        {
-            moveTarget.SetPositionAndRotation(
-                targetPosition,
-                targetRotation
-            );
-
-            isMoving = false;
-            moveRoutine = null;
-            yield break;
-        }
-
         float timer = 0f;
 
         while (timer < moveDuration)
         {
-            float deltaTime =
+            float delta =
                 useUnscaledTime
                 ? Time.unscaledDeltaTime
                 : Time.deltaTime;
 
-            timer += deltaTime;
+            timer += delta;
 
-            float t = Mathf.Clamp01(
-                timer / moveDuration
-            );
+            float t =
+                moveDuration > 0f
+                ? Mathf.Clamp01(timer / moveDuration)
+                : 1f;
 
             float eased =
                 moveCurve != null
                 ? moveCurve.Evaluate(t)
                 : t;
 
-            moveTarget.position = Vector3.Lerp(
-                startPosition,
-                targetPosition,
-                eased
-            );
-
-            moveTarget.rotation = Quaternion.Slerp(
-                startRotation,
-                targetRotation,
-                eased
+            moveTarget.SetPositionAndRotation(
+                Vector3.Lerp(
+                    startPosition,
+                    targetPosition,
+                    eased
+                ),
+                Quaternion.Slerp(
+                    startRotation,
+                    targetRotation,
+                    eased
+                )
             );
 
             yield return null;
