@@ -4,33 +4,12 @@ using UnityEngine;
 [RequireComponent(typeof(Collider))]
 public class ResultBoardClickable : MonoBehaviour
 {
-    public enum FocusTargetMode
-    {
-        InspectorWorldPosition,
-        CameraRelative,
-        FocusPoint
-    }
+    [Header("必須設定")]
 
-    [Header("移動対象")]
-    [Tooltip("看板全体の一番上の親を指定してください。")]
+    [Tooltip("移動させる看板全体のルートを指定してください。")]
     public Transform moveTarget;
 
-    [Header("移動先の決め方")]
-    public FocusTargetMode targetMode =
-        FocusTargetMode.InspectorWorldPosition;
-
-    [Header("Inspectorで世界座標を指定")]
-    public Vector3 focusedWorldPosition;
-    public Vector3 focusedWorldEulerAngles;
-
-    [Header("カメラ基準")]
-    public Camera targetCamera;
-    public Vector3 cameraRelativePosition =
-        new Vector3(0f, 0f, 1.25f);
-    public Vector3 cameraRelativeEulerAngles =
-        new Vector3(0f, 180f, 0f);
-
-    [Header("指定Transform")]
+    [Tooltip("看板を持ってくる位置の空オブジェクト。看板の子にはしないでください。")]
     public Transform focusPoint;
 
     [Header("移動")]
@@ -40,33 +19,21 @@ public class ResultBoardClickable : MonoBehaviour
     public AnimationCurve moveCurve =
         AnimationCurve.EaseInOut(0f, 0f, 1f, 1f);
 
-    [Header("操作")]
-    public bool clickAgainToReturn = true;
     public bool useUnscaledTime = true;
-
-    [Header("安全")]
-    public float maxAllowedMoveDistance = 50f;
-
-    [Header("カメラ導入中の操作")]
-    public ResultCameraIntroMover cameraIntroMover;
-    public bool blockWhileCameraIntro = true;
+    public bool clickAgainToReturn = true;
 
     [Header("状態")]
     public bool isFocused;
     public bool isMoving;
 
-    private Vector3 originalWorldPosition;
-    private Quaternion originalWorldRotation;
-    private bool originalPoseStored;
+    private Vector3 originalPosition;
+    private Quaternion originalRotation;
     private Coroutine moveRoutine;
 
     void Awake()
     {
         if (moveTarget == null)
             moveTarget = transform;
-
-        if (targetCamera == null)
-            targetCamera = Camera.main;
 
         Collider col = GetComponent<Collider>();
 
@@ -76,17 +43,37 @@ public class ResultBoardClickable : MonoBehaviour
 
     void Start()
     {
-        StoreOriginalPose();
+        originalPosition = moveTarget.position;
+        originalRotation = moveTarget.rotation;
+
+        ValidateReferences();
+    }
+
+    void ValidateReferences()
+    {
+        if (focusPoint == null)
+        {
+            Debug.LogError(
+                $"{name}: Focus Pointが設定されていません。",
+                this
+            );
+            return;
+        }
+
+        if (focusPoint == moveTarget ||
+            focusPoint.IsChildOf(moveTarget))
+        {
+            Debug.LogError(
+                $"{name}: Focus Pointを看板の子にしてはいけません。" +
+                " Main Cameraかシーン直下に置いてください。",
+                this
+            );
+        }
     }
 
     public void ToggleFocus()
     {
         if (isMoving)
-            return;
-
-        if (blockWhileCameraIntro &&
-            cameraIntroMover != null &&
-            cameraIntroMover.IsMoving)
             return;
 
         if (ResultCursorController.Instance != null &&
@@ -109,32 +96,13 @@ public class ResultBoardClickable : MonoBehaviour
         if (isFocused || isMoving)
             return;
 
-        if (!originalPoseStored)
-            StoreOriginalPose();
-
-        if (!TryGetFocusPose(
-            out Vector3 targetPosition,
-            out Quaternion targetRotation))
-        {
+        if (!CanUseFocusPoint())
             return;
-        }
 
-        float distance =
-            Vector3.Distance(
-                moveTarget.position,
-                targetPosition
-            );
-
-        if (maxAllowedMoveDistance > 0f &&
-            distance > maxAllowedMoveDistance)
-        {
-            Debug.LogWarning(
-                $"{name}: 移動距離が大きすぎるため中止しました。" +
-                $" 距離={distance:F2}",
-                this
-            );
-            return;
-        }
+        // 移動開始時点のワールド座標を固定。
+        // 移動中にFocusPointが動いても追従しない。
+        Vector3 targetPosition = focusPoint.position;
+        Quaternion targetRotation = focusPoint.rotation;
 
         isFocused = true;
 
@@ -144,7 +112,7 @@ public class ResultBoardClickable : MonoBehaviour
                 .RegisterFocusedBoard(this);
         }
 
-        StartMove(targetPosition, targetRotation);
+        StartMovement(targetPosition, targetRotation);
     }
 
     public void ReturnToOriginal()
@@ -160,120 +128,53 @@ public class ResultBoardClickable : MonoBehaviour
                 .UnregisterFocusedBoard(this);
         }
 
-        StartMove(
-            originalWorldPosition,
-            originalWorldRotation
-        );
+        StartMovement(originalPosition, originalRotation);
     }
 
-    public void SaveCurrentPositionAsOriginal()
-    {
-        if (isFocused || isMoving)
-            return;
-
-        StoreOriginalPose();
-    }
-
-    bool TryGetFocusPose(
-        out Vector3 targetPosition,
-        out Quaternion targetRotation)
-    {
-        switch (targetMode)
-        {
-            case FocusTargetMode.InspectorWorldPosition:
-                targetPosition = focusedWorldPosition;
-                targetRotation =
-                    Quaternion.Euler(
-                        focusedWorldEulerAngles
-                    );
-                return true;
-
-            case FocusTargetMode.CameraRelative:
-            {
-                Camera cam =
-                    targetCamera != null
-                    ? targetCamera
-                    : Camera.main;
-
-                if (cam == null)
-                {
-                    Debug.LogWarning(
-                        $"{name}: Cameraが設定されていません。",
-                        this
-                    );
-
-                    targetPosition = Vector3.zero;
-                    targetRotation = Quaternion.identity;
-                    return false;
-                }
-
-                Transform cameraTransform = cam.transform;
-
-                targetPosition =
-                    cameraTransform.position +
-                    cameraTransform.right *
-                    cameraRelativePosition.x +
-                    cameraTransform.up *
-                    cameraRelativePosition.y +
-                    cameraTransform.forward *
-                    cameraRelativePosition.z;
-
-                targetRotation =
-                    cameraTransform.rotation *
-                    Quaternion.Euler(
-                        cameraRelativeEulerAngles
-                    );
-
-                return true;
-            }
-
-            case FocusTargetMode.FocusPoint:
-                if (focusPoint == null)
-                {
-                    Debug.LogWarning(
-                        $"{name}: Focus Pointが未設定です。",
-                        this
-                    );
-
-                    targetPosition = Vector3.zero;
-                    targetRotation = Quaternion.identity;
-                    return false;
-                }
-
-                targetPosition = focusPoint.position;
-                targetRotation = focusPoint.rotation;
-                return true;
-        }
-
-        targetPosition = Vector3.zero;
-        targetRotation = Quaternion.identity;
-        return false;
-    }
-
-    void StoreOriginalPose()
+    bool CanUseFocusPoint()
     {
         if (moveTarget == null)
-            return;
+        {
+            Debug.LogError(
+                $"{name}: Move Targetがありません。",
+                this
+            );
+            return false;
+        }
 
-        originalWorldPosition = moveTarget.position;
-        originalWorldRotation = moveTarget.rotation;
-        originalPoseStored = true;
+        if (focusPoint == null)
+        {
+            Debug.LogError(
+                $"{name}: Focus Pointがありません。",
+                this
+            );
+            return false;
+        }
+
+        if (focusPoint == moveTarget ||
+            focusPoint.IsChildOf(moveTarget))
+        {
+            Debug.LogError(
+                $"{name}: Focus PointがMove Targetの子になっています。" +
+                " 看板とは無関係な場所へ移動してください。",
+                this
+            );
+            return false;
+        }
+
+        return true;
     }
 
-    void StartMove(
+    void StartMovement(
         Vector3 targetPosition,
         Quaternion targetRotation)
     {
         if (moveRoutine != null)
             StopCoroutine(moveRoutine);
 
-        moveRoutine =
-            StartCoroutine(
-                MoveRoutine(
-                    targetPosition,
-                    targetRotation
-                )
-            );
+        moveRoutine = StartCoroutine(
+            MoveRoutine(targetPosition, targetRotation)
+        );
     }
 
     IEnumerator MoveRoutine(
@@ -282,11 +183,8 @@ public class ResultBoardClickable : MonoBehaviour
     {
         isMoving = true;
 
-        Vector3 startPosition =
-            moveTarget.position;
-
-        Quaternion startRotation =
-            moveTarget.rotation;
+        Vector3 startPosition = moveTarget.position;
+        Quaternion startRotation = moveTarget.rotation;
 
         if (moveDuration <= 0f)
         {
@@ -311,33 +209,25 @@ public class ResultBoardClickable : MonoBehaviour
 
             timer += deltaTime;
 
-            float normalizedTime =
-                Mathf.Clamp01(
-                    timer / moveDuration
-                );
+            float t = Mathf.Clamp01(
+                timer / moveDuration
+            );
 
-            float easedTime =
+            float eased =
                 moveCurve != null
-                ? moveCurve.Evaluate(normalizedTime)
-                : normalizedTime;
+                ? moveCurve.Evaluate(t)
+                : t;
 
-            Vector3 nextPosition =
-                Vector3.LerpUnclamped(
-                    startPosition,
-                    targetPosition,
-                    easedTime
-                );
+            moveTarget.position = Vector3.Lerp(
+                startPosition,
+                targetPosition,
+                eased
+            );
 
-            Quaternion nextRotation =
-                Quaternion.SlerpUnclamped(
-                    startRotation,
-                    targetRotation,
-                    easedTime
-                );
-
-            moveTarget.SetPositionAndRotation(
-                nextPosition,
-                nextRotation
+            moveTarget.rotation = Quaternion.Slerp(
+                startRotation,
+                targetRotation,
+                eased
             );
 
             yield return null;
