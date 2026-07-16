@@ -97,9 +97,19 @@ public class TitleMonitorMenuController : MonoBehaviour
 
     void Awake()
     {
+        Debug.Log(
+            "TitleMonitorMenuController: Awake開始",
+            this
+        );
+
         ResolveReferences();
         BuildRuntimeObjects();
         ConfigureInitialState();
+
+        Debug.Log(
+            $"TitleMonitorMenuController: 初期化完了 / TV={tvCanvas != null} / Raw={roomRawImage != null}",
+            this
+        );
     }
 
     void Start()
@@ -187,6 +197,18 @@ public class TitleMonitorMenuController : MonoBehaviour
             );
             return;
         }
+
+        if (tvCanvas.renderMode == RenderMode.WorldSpace &&
+            tvCanvas.worldCamera == null)
+        {
+            tvCanvas.worldCamera = mainCamera;
+        }
+
+        GraphicRaycaster raycaster =
+            tvCanvas.GetComponent<GraphicRaycaster>();
+
+        if (raycaster != null)
+            raycaster.enabled = true;
 
         CreateExclusiveRawImages();
         CreateMonitorFlicker();
@@ -300,10 +322,23 @@ public class TitleMonitorMenuController : MonoBehaviour
             new Vector2(0f, -55f),
             BackToMain
         );
+
+        mainPanel.transform.SetAsLastSibling();
+        modePanel.transform.SetAsLastSibling();
+
+        Debug.Log(
+            "TitleMonitorMenuController: メニューボタン生成完了",
+            this
+        );
     }
 
     GameObject CreatePanel(string panelName)
     {
+        Transform panelParent =
+            roomRawImage != null && roomRawImage.transform.parent != null
+            ? roomRawImage.transform.parent
+            : tvCanvas.transform;
+
         GameObject panel =
             new GameObject(
                 panelName,
@@ -311,12 +346,28 @@ public class TitleMonitorMenuController : MonoBehaviour
                 typeof(CanvasGroup)
             );
 
-        panel.transform.SetParent(tvCanvas.transform, false);
+        panel.transform.SetParent(panelParent, false);
 
         RectTransform rect =
             panel.GetComponent<RectTransform>();
 
-        StretchFull(rect);
+        if (roomRawImage != null)
+        {
+            RectTransform rawRect =
+                roomRawImage.rectTransform;
+
+            rect.anchorMin = rawRect.anchorMin;
+            rect.anchorMax = rawRect.anchorMax;
+            rect.pivot = rawRect.pivot;
+            rect.anchoredPosition = rawRect.anchoredPosition;
+            rect.sizeDelta = rawRect.sizeDelta;
+            rect.localRotation = rawRect.localRotation;
+            rect.localScale = rawRect.localScale;
+        }
+        else
+        {
+            StretchFull(rect);
+        }
 
         panel.transform.SetAsLastSibling();
         return panel;
@@ -346,8 +397,33 @@ public class TitleMonitorMenuController : MonoBehaviour
         rect.anchorMin = new Vector2(0.5f, 0.5f);
         rect.anchorMax = new Vector2(0.5f, 0.5f);
         rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = buttonSize;
-        rect.anchoredPosition = anchoredPosition;
+
+        RectTransform parentRect =
+            parent as RectTransform;
+
+        Vector2 resolvedSize = buttonSize;
+        Vector2 resolvedPosition = anchoredPosition;
+
+        if (parentRect != null)
+        {
+            float width =
+                Mathf.Max(1f, parentRect.rect.width);
+            float height =
+                Mathf.Max(1f, parentRect.rect.height);
+
+            resolvedSize = new Vector2(
+                width * 0.58f,
+                height * 0.19f
+            );
+
+            resolvedPosition = new Vector2(
+                anchoredPosition.x / 190f * width,
+                anchoredPosition.y / 180f * height
+            );
+        }
+
+        rect.sizeDelta = resolvedSize;
+        rect.anchoredPosition = resolvedPosition;
 
         Image image = buttonObject.GetComponent<Image>();
         image.color = new Color(0.05f, 0.05f, 0.05f, 0.82f);
